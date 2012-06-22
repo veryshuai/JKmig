@@ -1,4 +1,7 @@
 //first pass at simulation of migration model dynamics, now in C++
+//This program exogenously fixes the percentage of migrants from the poor country
+//and tracks both gdp levels, growth, and the evolution of the cost distributions.
+
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -8,13 +11,14 @@
 
 using namespace std;
 
-#define alp     0.02 //meeting hazard
-#define B       0.0 //penalty for living abroad
-#define theta  -0.5 //production function parameter
-#define popsize 10000 //population of countries
-#define rho     0.05 //time discount factor
-#define cutoff  0.80 //cut-off for migration
-#define fparam  15.00 //the higher this is, the better foreign is relative to home
+#define iters   30    //number of iterations (years)
+#define alp     0.1  //meeting hazard
+#define B       0.0   //penalty for living abroad
+#define theta  -0.5   //production function parameter
+#define popsize 10000  //population of countries
+#define rho     0.05  //time discount factor
+#define cutoff  0.5  //percentage of people who migrate
+#define fparam  15.00 //the higher this is, the better foreign cost dist is relative to home
 
 //global parameters
 int pt_num = 3000; //number of points in kernel density estimation
@@ -29,11 +33,6 @@ float prod (float cost, bool home)
 	else
 		cout << "Error in GDP calculation" << endl;
 }
-
-//float init_val (float cost) //copied from Moll-Lucas
-//{
-//	return(pow(cost,theta)/(rho+theta*alp));
-//}
 
 void kernel_density (float hd [], float bw, int max_val, float dens [], float grid [])
 {
@@ -170,8 +169,8 @@ int main ()
 	old_gdp_f = gdp_calc(fd,af);
 	gdps << old_gdp_h << " " << old_gdp_f << endl;
 
-	//loop to get density progression
-	for (int k = 0; k<10 ; k++)
+	//loop to get density evolution 
+	for (int k = 0; k<iters ; k++)
 	{
 		cout << "Loop No: " << k+1 << endl;
 
@@ -263,6 +262,7 @@ int main ()
 		write2me_h << endl;
 		write2me_f << endl;
 
+		//write gdps and growth rates
 		new_gdp_h = gdp_calc(hd,ah);
 		new_gdp_f = gdp_calc(fd,af);
 		growth << (new_gdp_h-old_gdp_h)/old_gdp_h << " " << (new_gdp_f-old_gdp_f)/old_gdp_f << endl;
