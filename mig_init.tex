@@ -1,0 +1,75 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bbm} %for indicator function
+\usepackage[margin = 1in]{geometry}
+
+\title{Initial Attempt at Two-Country Lucas-Moll}
+\author{David Jinkins}
+
+%front matter for theorem defs
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+%end theorem defs
+			    
+\begin{document}
+\maketitle
+
+There are two countries, a rich country and a poor country.  
+For now, let the populations of the two countries be the same, with unit mass in each country.
+There is a distribution of ``production cost'' for nationals of each country.
+In the rich country, this distribution is called $F$, and in the poor country it is called $G$.  
+Assume that the $G$ first-order stochastically dominates $F$, $G$ and $F$ are both concave (like pareto/exponential distribution), and that both distributions are absolutely continuous.
+An individual of cost level $z$ produces and consumes $z^{-\theta}$ in each period.
+The only decision that an individual makes is where to live.
+An individual chooses to live in either home $h$ or foreign $f$.
+Living in foreign is costly.
+Individuals living in foreign have to pay a flow cost of B (for barrier).
+Preferences over consumption and location choice at time $\tau$ are ordered:
+\begin{equation}
+  U(c,l) = \int_\tau^\infty e^{-\rho (t-\tau)} \left(c(t) - B \mathbbm{1}_{\{l(t) = f\}} \right) dt  
+\end{equation}
+
+As in LM, people randomly run into each other.  
+Meetings are proportional to population, and happen with poisson rate $\alpha$.  
+Intuitively, there will be a cut-off (possibly infinite) productivity level for which all poor country nationals with higher cost will migrate to the rich country. 
+\footnote{For now I assume this without proof, but I think it should be true\dots}
+Denote this cut-off cost by $z_m(t)$.
+
+Taking the cut-off as given, the productivity distributions evolve according to the following rules:
+\begin{align}
+  \frac{\partial f(z,t)}{\partial t} &= \alpha f(z,t) \Big( -F(z,t) + \left(1-F(z,t)\right) - \big(G(z,t) - G(\min\{z_m(t),z\},t) \big) \Big) \\
+  \frac{\partial g(z,t)}{\partial t} &= 
+  \begin{cases} 
+    \alpha g(z,t) \Big( -G(z,t) + \big(G(z_m(t),t) - G(z,t) \big) \Big) & \mbox{if } z<z_m(t) \\
+    \alpha g(z,t) \Big( -\big(G(z,t)-G(z_m(t),t)\big) + \big(1-G(z,t)\big) - F(z,t) \Big) &\mbox{if } z>z_m(t)
+  \end{cases}
+\end{align}
+
+Since the cost distribution is better in the rich country, rich country nationals always choose to live at home.  Let $\Delta V := V(y,t)-V(z,t)$. A poor country national's value function is given by:  
+\begin{align}
+  \rho V(z,t) &= z^{-\theta} + \frac{\partial V(z,t)}{\partial t} \nonumber  \\
+  &+ \max\{\alpha \int_0^{\min \{z,z_m(t)\}} \Delta V g(y,t) dy,\  \alpha \int_0^z \Delta V f(y,t) dy + \alpha \int_{z_m(t)}^{\max \{z,z_m(t)\}}\Delta V g(y,t)dy - B\}
+\end{align}
+The cut-off point, $z_m(t)$, satisfies:
+\begin{equation}
+  \alpha \int_0^{z_m(t)} \Delta V g(y,t) dy = \alpha \int_0^{z_m(t)} \Delta V f(y,t)dy - B
+\end{equation}
+\begin{lemma}
+ There are at most two cut-off points. 
+\end{lemma}
+\begin{proof}
+$G$ and $F$ are both concave by assumption, so their probability density functions $g$ and $f$ are both strictly decreasing.  
+Since there is no advantage to having a higher cost, the value function $V$ must also be weakly decreasing in $z$ (for a fixed $t$).   
+Thus the compositions $\Delta V \circ g$ and $\Delta V \circ f$ are both strictly decreasing in cost between zero and any fixed $z$.
+
+
+\end{proof}
+A first little required proof would be that given the stochastic dominance assumption $z_m(t)$ is unique.
+The next thing to do is think a little bit about equilibrium or balanced growth path.
+\end{document}
+
+
