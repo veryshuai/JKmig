@@ -15,15 +15,15 @@ using namespace std;
 
 const double 	HALP    = 0.02;   //home meeting hazard
 const double 	FALP    = 0.015;   //foreign meeting hazard
-const double 	B       = 20.0;   //penalty for living abroad
+const double 	B       = 1.0;   //penalty for living abroad
 const double    THETA   =-0.5;    //production function parameter
-const int 	GRIDSIZE= 2000;  //number of grid points
+const int 	GRIDSIZE= 3000;  //number of grid points
 const int       GRIDMAX = 300;    //maximum grid value
 const double 	RHO     = 0.05;   //time discount factor
 const double    FLAM    = 1;      //foreign distribution lambda
-const double	HLAM 	= 0.3;      //home distribution lambda
+const double	HLAM 	= 0.30;      //home distribution lambda
 
-// const int 	MIG_INIT   = 0.01 * (float) GRIDSIZE; 		 //initial migration cut-off guess
+//initial migration cut-off guess
 const int  	MIG_INIT   = 100;
 const double    INCREMENT = (double) GRIDMAX/ (double) GRIDSIZE; //step size for the grid
 
@@ -51,23 +51,38 @@ void cumsum (Eigen::VectorXd& input, Eigen::VectorXd& output)
 
 int main () 
 {
+	//output stuff
+	ofstream h_stream; 
+	ofstream f_stream; 
+	ofstream hd_stream;
+	ofstream fd_stream; 
+	ofstream chd_stream;
+	ofstream cfd_stream; 
+	ofstream mig_cut_stream;
+  	h_stream.open("h.csv");
+  	f_stream.open("f.csv");
+  	hd_stream.open("hd.csv");
+  	fd_stream.open("fd.csv");
+  	chd_stream.open("chd.csv");
+  	cfd_stream.open("cfd.csv");
+	mig_cut_stream.open("cut.csv");
+	
 	//Initialize ALL required variables
 	Eigen::VectorXd h(GRIDSIZE); //grid values
 	Eigen::VectorXd f(GRIDSIZE);
-	Eigen::VectorXd fd(GRIDSIZE);
-	Eigen::VectorXd hd(GRIDSIZE); //grid densities
+	Eigen::VectorXd fd(GRIDSIZE); //grid densities
+	Eigen::VectorXd hd(GRIDSIZE); 
 	Eigen::VectorXd hd_old(GRIDSIZE); 
-	Eigen::VectorXd chd(GRIDSIZE); //cumulative distribution
-	Eigen::VectorXd cfd(GRIDSIZE); //cumulative distribution
-	Eigen::VectorXd val0(GRIDSIZE); //initial value function
-	Eigen::VectorXd val1(GRIDSIZE); //initial value function
-	Eigen::VectorXd dval0(GRIDSIZE); 
-	Eigen::VectorXd fth(GRIDSIZE); //initialize first term placeholders
+	Eigen::VectorXd chd(GRIDSIZE); //cumulative distributions
+	Eigen::VectorXd cfd(GRIDSIZE); 
+	Eigen::VectorXd val0(GRIDSIZE); //old value function
+	Eigen::VectorXd val1(GRIDSIZE); //new value function
+	Eigen::VectorXd fth(GRIDSIZE); //initialize first term placeholders for value function approximation
 	Eigen::VectorXd ftf(GRIDSIZE); 
-	Eigen::VectorXd cfth(GRIDSIZE); 
+	Eigen::VectorXd cfth(GRIDSIZE); //cumulative first terms for value function approximation
 	Eigen::VectorXd cftf(GRIDSIZE); 
-	Eigen::VectorXd Sh(GRIDSIZE); //home integral approx	
-	Eigen::VectorXd Sf(GRIDSIZE); //foreign integral approx
+	Eigen::VectorXd Sh(GRIDSIZE); //value function integral approx	
+	Eigen::VectorXd Sf(GRIDSIZE); 
 	Eigen::VectorXd ph(GRIDSIZE);
 	Eigen::VectorXd pf(GRIDSIZE);
 	Eigen::MatrixXd A(GRIDSIZE,GRIDSIZE);
@@ -104,14 +119,15 @@ int main ()
 	{	
 		hd_old = hd;	
 		mig_cut_old = mig_cut;
-		//
-		//loop to make the area under the migration cut-off consistent
+		barea_diff = 1;
+		
+		//calculate new distribution. Stopping rule is area under mig_cut must be consistent with eq (TBA).
 		while  (barea_diff>1e-3)
 		{
 			hd[0] = HLAM;
 			chd[0] = 0;
 			
-			//main loop to calculate the distribution
+			//loop to calculate the distribution
 			for (int k=0;k<mig_cut;k++)
 			{
 				hd[k+1] = hd[k] + INCREMENT / (FLAM * h[k]) * (-hd[k] - hd[k] * chd[k] + hd[k] * (barea - chd[k]) + fd[k] * (1-barea) * FALP / HALP);
@@ -126,22 +142,14 @@ int main ()
 				chd[k] = chd[k-1] + hd[k] * INCREMENT;
 			}
 			
-			// //output
-			// cout << endl;
-			// for (int k=0;k<15;k++)
-			// {
-			// 	cout << h[k] << ' ' << hd[k] << ' ' << chd[k] << endl;
-			// }
-			// cout << chd[GRIDSIZE-1] << endl;
-			// cout << hd[GRIDSIZE-1] << endl; 
-
 			barea_old = barea;
 			barea = chd[mig_cut];
 			barea_diff = abs(barea - barea_old);
-			cout << "Difference is " << barea_diff << endl;
+			cout << "Inconsistency in area under mig_cut is " << barea_diff << endl;
 		}	
+		cout << endl;
 
-		//rescale the migrant section of the distribution to get correct mass.
+		//rescale the migrant section of the distribution to get correct mass (going to be a discontinuity at hd[mig_cut].
 		scale = chd[GRIDSIZE-1];
 		if (scale>0)
 		{
@@ -168,10 +176,6 @@ int main ()
 
 		while (diff.dot(diff)/val0.dot(val0)>1e-5)
 		{
-			//numerical derivative
-			dval0[0] = 0;
-			for (int k=1;k<GRIDSIZE;k++)
-				dval0[k] = (val0[k] - val0[k-1])/INCREMENT;
 			
 			//cumulative first terms
 			fth[0] = val0[0] * hd[0]; 
@@ -212,7 +216,7 @@ int main ()
 					mig_cut = k;
 				}
 			}
-			cout << mig_cut << endl;	
+			cout << "The cut_off is currently at " << h[mig_cut] << endl << endl;	
 			// with cut-off in hand, solve for value function using the (really cool!) Lucas Moll matrix method.
 			for (int k=0;k<GRIDSIZE-1;k++)
 			{
@@ -238,7 +242,6 @@ int main ()
 
 			val0 = val1; //Read in old value
 			A = B-C;
-			//A.lu().solve(b, &val1); //This is the solve step	
 			A.llt().solveInPlace(b);
 			val1 = b;
 			//val1 = A.inverse()*b; //Alternative (direct inversion)
@@ -246,8 +249,33 @@ int main ()
 		}
 		dist_diff = hd - hd_old;
 	}
-	for (int k=0;k<15;k++)
-		cout << f[k] << "  " << fd[k] << "  " << hd[k] << "  " << chd[k] << endl;
+
+      	//write to files
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		h_stream << h[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		f_stream << f[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		hd_stream << hd[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		fd_stream << fd[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		chd_stream << chd[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		cfd_stream << cfd[m] << endl;
+ 	}
+	mig_cut_stream << mig_cut << endl;
 
 	return(0);
 }

@@ -24,74 +24,74 @@ const double 	RHO     = 0.05;   //time discount factor
 const double    FPARAM  = 0.02;   //foreign distribution exponential parameter
 const double    HPARAM  = 0.04;   //home distribution exponential parameter
 
-// //calculates production given cost and location
-// double prod (double cost, bool home)
-// {
-// 	if (home == 1)
-// 		return (pow(cost,THETA));
-// 	if (home == 0)	
-// 		return (pow(cost,THETA)/(1.0+B));
-// 	else
-// 		cout << "Error in GDP calculation" << endl;
-// }
-// 
-// void kernel_density (double hd [], double bw, int max_val, double dens [], double grid [])
-// {
-// 	double gap    = (double) max_val / (double) pt_num;
-// 	double cur_pt;
-// 	double summation;
-// 	double arg;
-// 	double runsum = 0.0;;
-// 
-// 	for (int k=0;k<pt_num;k++)
-// 	{
-// 		cur_pt = gap*(double) k + .001;
-// 		grid [k] = cur_pt;
-// 		summation = 0.0;
-// 		for (int m=0;m<POPSIZE;m++)
-// 		{
-// 			arg = (cur_pt - hd[m])/bw;
-// 			if (arg>0)
-// 				summation += exp(-arg);
-// 		}
-// 		dens[k] = summation/((double) pt_num*bw);
-// 		runsum += dens[k];
-// 	}
-// 
-// 	for (int k=0;k<pt_num;k++)
-// 		dens[k] = dens[k]/runsum;
-// }
-// 
-// double gdp_calc (double hd [], bool ah [])
-// {
-// 	double gdp = 0;
-// 	double addme;
-// 	for (int k=0;k<POPSIZE;k++)
-// 	{
-// 		addme = prod(hd[k],ah[k]);
-// 		if (addme<1e32)
-// 			gdp += addme;
-// 		else
-// 			cout << "Error: Infs in GDP calculation." << endl;
-// 	}
-// 	return(gdp);
-// }
-// 
-// void cum_sum (double dens [], double cdens [])
-// {
-// 	double summation = 0.0;
-// 
-// 	for (int m=0;m<pt_num;m++)
-// 	{
-// 		summation += dens[m];
-// 		cdens[m] = summation;
-// 	}
-// 	
-// 	for (int m=0;m<pt_num;m++)
-// 	{
-// 		cdens[m] = cdens[m]/cdens[pt_num-1];
-// 	}
-// }
+//calculates production given cost and location
+double prod (double cost, bool home)
+{
+	if (home == 1)
+		return (pow(cost,THETA));
+	if (home == 0)	
+		return (pow(cost,THETA)/(1.0+B));
+	else
+		cout << "Error in GDP calculation" << endl;
+}
+
+void kernel_density (double hd [], double bw, int max_val, double dens [], double grid [])
+{
+	double gap    = (double) max_val / (double) pt_num;
+	double cur_pt;
+	double summation;
+	double arg;
+	double runsum = 0.0;;
+
+	for (int k=0;k<pt_num;k++)
+	{
+		cur_pt = gap*(double) k + .001;
+		grid [k] = cur_pt;
+		summation = 0.0;
+		for (int m=0;m<POPSIZE;m++)
+		{
+			arg = (cur_pt - hd[m])/bw;
+			if (arg>0)
+				summation += exp(-arg);
+		}
+		dens[k] = summation/((double) pt_num*bw);
+		runsum += dens[k];
+	}
+
+	for (int k=0;k<pt_num;k++)
+		dens[k] = dens[k]/runsum;
+}
+
+double gdp_calc (double hd [], bool ah [])
+{
+	double gdp = 0;
+	double addme;
+	for (int k=0;k<POPSIZE;k++)
+	{
+		addme = prod(hd[k],ah[k]);
+		if (addme<1e32)
+			gdp += addme;
+		else
+			cout << "Error: Infs in GDP calculation." << endl;
+	}
+	return(gdp);
+}
+
+void cum_sum (double dens [], double cdens [])
+{
+	double summation = 0.0;
+
+	for (int m=0;m<pt_num;m++)
+	{
+		summation += dens[m];
+		cdens[m] = summation;
+	}
+	
+	for (int m=0;m<pt_num;m++)
+	{
+		cdens[m] = cdens[m]/cdens[pt_num-1];
+	}
+}
 
 int main () 
 {

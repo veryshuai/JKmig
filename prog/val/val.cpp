@@ -158,91 +158,91 @@ int main ()
 
 	while (diff.dot(diff)/val0.dot(val0)>1e-5)
 	{
-	//numerical derivative
-	dval0[0] = 0;
-	for (int k=1;k<GRIDSIZE;k++)
-		dval0[k] = (val0[k] - val0[k-1])/INCREMENT;
-	
-	//cumulative first terms
-	fth[0] = val0[0] * hd[0]; 
-	ftf[0] = val0[0] * fd[0]; 
-	for (int k=1;k<GRIDSIZE;k++)	
-	{
-		fth[k] = fth[k-1] + val0[k] * hd[k];
-		ftf[k] = ftf[k-1] + val0[k] * fd[k];
-	}			
-	cumsum(fth,cfth);
-	cumsum(ftf,cftf);
-	
-	//get integral approxs
-	Sh[0] = Sf[0] = 0.0; 
-	for (int k=1;k<GRIDSIZE;k++) 
-	{
-		Sh[k] = cfth[k] - val0[k] * chd[k];
-		Sf[k] = cftf[k] - val0[k] * cfd[k];
-	}			
-	
-	//get productions
-	for (int k=0;k<GRIDSIZE;k++) 
-	{
-		ph[k] = prod(h[k],home);
-		pf[k] = prod(f[k],foreign);
-	}
-
-	//find cutoff for migration
-	found = 0;
-	for (int k=0;k<GRIDSIZE;k++)
-	{
-		stayhome[k] = ph[k] + ALP * Sh[k];
-		goabroad[k] = pf[k] + FALP * Sf[k];
-		if (found == 0 & stayhome[k] < goabroad[k])
-		{
-			found = 1;
-			mig_cut = k;
-		}
-	}
-	cout << mig_cut << endl << endl;	
-	// with cut-off in hand, solve for value function using the (really cool!) Lucas Moll matrix method.
-	
-	for (int k=0;k<GRIDSIZE;k++)
-	{
-		if (k<mig_cut)
-		{
-			B(k,k) = (RHO-THETA*ALP+ALP*chd[k]+ALP*h[k]/INCREMENT);
-			for (int m=0;m<k+1;m++)
-				C(k,m) = hd[m] * ALP * INCREMENT;
-			b[k] = ph[k];
-			if (k<GRIDSIZE-1)
-				B(k,k+1) = -ALP * h[k] / INCREMENT;
-		}
-		else
-		{	
-			B(k,k) = (RHO-THETA*ALP+FALP*cfd[k]+ALP*h[k]/INCREMENT);
-			for (int m=0;m<k+1;m++)
-				C(k,m) = fd[m] * FALP * INCREMENT;
-			b[k] = pf[k];
-			if (k<GRIDSIZE-1)
-				B(k,k+1) = -FALP * f[k] / INCREMENT;
-		}
-	}
-	A = B-C;
-	//A.lu().solve(b, &val1); //This is the solve step	
-	val0 = val1; //Read in old value
-	val1 = A.inverse()*b; //Alternative (direct inversion)
-	diff = val1-val0;	
+		//numerical derivative
+		dval0[0] = 0;
+		for (int k=1;k<GRIDSIZE;k++)
+			dval0[k] = (val0[k] - val0[k-1])/INCREMENT;
 		
-	// // Display contents of matrices
-	// for (int k=0;k<5;k++)
-	// 	cout << B(k,0) << ' ' << B(k,1) << ' ' << B(k,2) << ' ' << B(k,3) << ' ' << B(k,4) << endl;
-	// 	
-	// for (int k=0;k<5;k++)
-	// 	cout << C(k,0) << ' ' << C(k,1) << ' ' << C(k,2) << ' ' << C(k,3) << ' ' << C(k,4) << endl;
+		//cumulative first terms
+		fth[0] = val0[0] * hd[0]; 
+		ftf[0] = val0[0] * fd[0]; 
+		for (int k=1;k<GRIDSIZE;k++)	
+		{
+			fth[k] = fth[k-1] + val0[k] * hd[k];
+			ftf[k] = ftf[k-1] + val0[k] * fd[k];
+		}			
+		cumsum(fth,cfth);
+		cumsum(ftf,cftf);
+		
+		//get integral approxs
+		Sh[0] = Sf[0] = 0.0; 
+		for (int k=1;k<GRIDSIZE;k++) 
+		{
+			Sh[k] = cfth[k] - val0[k] * chd[k];
+			Sf[k] = cftf[k] - val0[k] * cfd[k];
+		}			
+		
+		//get productions
+		for (int k=0;k<GRIDSIZE;k++) 
+		{
+			ph[k] = prod(h[k],home);
+			pf[k] = prod(f[k],foreign);
+		}
 
-	// for (int k=0;k<5;k++)
-	// 	cout << A(k,0) << ' ' << A(k,1) << ' ' << A(k,2) << ' ' << A(k,3) << ' ' << A(k,4) << endl;
-	// for (int k=0;k<5;k++)
-	// 	cout << b(k) << endl;
-	for (int k=0;k<5;k++)
+		//find cutoff for migration
+		found = 0;
+		for (int k=0;k<GRIDSIZE;k++)
+		{
+			stayhome[k] = ph[k] + ALP * Sh[k];
+			goabroad[k] = pf[k] + FALP * Sf[k];
+			if (found == 0 & stayhome[k] < goabroad[k])
+			{
+				found = 1;
+				mig_cut = k;
+			}
+		}
+		cout << mig_cut << endl << endl;	
+		// with cut-off in hand, solve for value function using the (really cool!) Lucas Moll matrix method.
+		
+		for (int k=0;k<GRIDSIZE;k++)
+		{
+			if (k<mig_cut)
+			{
+				B(k,k) = (RHO-THETA*ALP+ALP*chd[k]+ALP*h[k]/INCREMENT);
+				for (int m=0;m<k+1;m++)
+					C(k,m) = hd[m] * ALP * INCREMENT;
+				b[k] = ph[k];
+				if (k<GRIDSIZE-1)
+					B(k,k+1) = -ALP * h[k] / INCREMENT;
+			}
+			else
+			{	
+				B(k,k) = (RHO-THETA*ALP+FALP*cfd[k]+ALP*h[k]/INCREMENT);
+				for (int m=0;m<k+1;m++)
+					C(k,m) = fd[m] * FALP * INCREMENT;
+				b[k] = pf[k];
+				if (k<GRIDSIZE-1)
+					B(k,k+1) = -FALP * f[k] / INCREMENT;
+			}
+		}
+		A = B-C;
+		//A.lu().solve(b, &val1); //This is the solve step	
+		val0 = val1; //Read in old value
+		val1 = A.inverse()*b; //Alternative (direct inversion)
+		diff = val1-val0;	
+			
+		// // Display contents of matrices
+		// for (int k=0;k<5;k++)
+		// 	cout << B(k,0) << ' ' << B(k,1) << ' ' << B(k,2) << ' ' << B(k,3) << ' ' << B(k,4) << endl;
+		// 	
+		// for (int k=0;k<5;k++)
+		// 	cout << C(k,0) << ' ' << C(k,1) << ' ' << C(k,2) << ' ' << C(k,3) << ' ' << C(k,4) << endl;
+
+		// for (int k=0;k<5;k++)
+		// 	cout << A(k,0) << ' ' << A(k,1) << ' ' << A(k,2) << ' ' << A(k,3) << ' ' << A(k,4) << endl;
+		// for (int k=0;k<5;k++)
+		// 	cout << b(k) << endl;
+		for (int k=0;k<5;k++)
 		cout << val1(k) << ' ' << val0(k) << endl << endl;
 		
 	}
