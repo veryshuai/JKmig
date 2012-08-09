@@ -14,14 +14,14 @@
 using namespace std;
 
 const double 	HALP    = 0.02;   //home meeting hazard
-const double 	FALP    = 0.015;   //foreign meeting hazard
+const double 	FALP    = 0.01;   //foreign meeting hazard
 const double 	B       = 1.0;   //penalty for living abroad
 const double    THETA   =-0.5;    //production function parameter
-const int 	GRIDSIZE= 3000;  //number of grid points
+const int 	GRIDSIZE= 1000;  //number of grid points
 const int       GRIDMAX = 300;    //maximum grid value
 const double 	RHO     = 0.05;   //time discount factor
 const double    FLAM    = 1;      //foreign distribution lambda
-const double	HLAM 	= 0.30;      //home distribution lambda
+const double	HLAM 	= .2;      //home distribution lambda
 
 //initial migration cut-off guess
 const int  	MIG_INIT   = 100;
@@ -59,13 +59,17 @@ int main ()
 	ofstream chd_stream;
 	ofstream cfd_stream; 
 	ofstream mig_cut_stream;
+	ofstream val_stream;
+	ofstream test_stream;
   	h_stream.open("h.csv");
   	f_stream.open("f.csv");
   	hd_stream.open("hd.csv");
   	fd_stream.open("fd.csv");
   	chd_stream.open("chd.csv");
   	cfd_stream.open("cfd.csv");
+	val_stream.open("val.csv");
 	mig_cut_stream.open("cut.csv");
+	test_stream.open("test.csv");
 	
 	//Initialize ALL required variables
 	Eigen::VectorXd h(GRIDSIZE); //grid values
@@ -100,7 +104,7 @@ int main ()
 	bool found = 0;
 		
 	double barea_diff 	= 1; 	
-	double barea 		= FALP / HALP * FLAM * h[MIG_INIT] + 1 / (1 + FLAM * h[MIG_INIT]);
+	double barea 		= min(FALP / HALP * FLAM * h[MIG_INIT] + 1 / (1 + FLAM * h[MIG_INIT]),.9999);
 	double barea_old 	= barea;
 	double scale 		= chd[GRIDSIZE-1];
 
@@ -112,6 +116,17 @@ int main ()
 		hd[k] 		=  fd[k];
 	}
 	cumsum(fd,cfd);	
+	// scale foreign to make a distribution 
+	scale = cfd[GRIDSIZE-1];
+	if (scale>0)
+	{
+		// for (int k=mig_cut;k<GRIDSIZE;k++)
+		for (int k=0;k<GRIDSIZE;k++)
+		{
+			fd[k] = fd[k] / scale;
+			cfd[k] = cfd[k] / scale;
+		}
+	}
 
 	hd_old = hd.array() + 1;
 	dist_diff = hd - hd_old;
@@ -135,7 +150,7 @@ int main ()
 				chd[k+1] = chd[k] + hd[k+1] * INCREMENT;
 			}
 
-			for (int k=mig_cut;k<GRIDSIZE-1;k++)
+			for (int k=mig_cut;k<GRIDSIZE;k++)
 			{
 				hd[k] = hd[k-1] + INCREMENT / (FLAM * h[k-1]) * (-hd[k-1] - hd[k-1] * FALP / HALP / (1 - FLAM * h[k-1]) + fd[k-1] * (1 - chd[k-1]) * FALP / HALP); 
 				hd[k] = max(hd[k],0.0);
@@ -143,7 +158,7 @@ int main ()
 			}
 			
 			barea_old = barea;
-			barea = chd[mig_cut];
+			barea = min(chd[mig_cut],.9999);
 			barea_diff = abs(barea - barea_old);
 			cout << "Inconsistency in area under mig_cut is " << barea_diff << endl;
 		}	
@@ -153,7 +168,8 @@ int main ()
 		scale = chd[GRIDSIZE-1];
 		if (scale>0)
 		{
-			for (int k=mig_cut;k<GRIDSIZE-1;k++)
+			// for (int k=mig_cut;k<GRIDSIZE;k++)
+			for (int k=0;k<GRIDSIZE;k++)
 			{
 				hd[k] = hd[k] / scale;
 				chd[k] = chd[k] / scale;
@@ -218,12 +234,12 @@ int main ()
 			}
 			cout << "The cut_off is currently at " << h[mig_cut] << endl << endl;	
 			// with cut-off in hand, solve for value function using the (really cool!) Lucas Moll matrix method.
-			for (int k=0;k<GRIDSIZE-1;k++)
+			for (int k=0;k<GRIDSIZE;k++)
 			{
 				if (k<mig_cut)
 				{
 					B(k,k) = (RHO-THETA*HALP+HALP*chd[k]+HALP*h[k]/INCREMENT);
-					for (int m=0;m<k+1;m++)
+					for (int m=0;m!=k+1;m++)
 						C(k,m) = hd[m] * HALP * INCREMENT;
 					b[k] = ph[k];
 					if (k<GRIDSIZE-1)
@@ -232,7 +248,7 @@ int main ()
 				else
 				{	
 					B(k,k) = (RHO-THETA*HALP+FALP*cfd[k]+HALP*h[k]/INCREMENT);
-					for (int m=0;m<k+1;m++)
+					for (int m=0;m!=k+1;m++)
 						C(k,m) = fd[m] * FALP * INCREMENT;
 					b[k] = pf[k];
 					if (k<GRIDSIZE-1)
@@ -240,17 +256,25 @@ int main ()
 				}
 			}
 
-			val0 = val1; //Read in old value
 			A = B-C;
 			A.llt().solveInPlace(b);
 			val1 = b;
 			//val1 = A.inverse()*b; //Alternative (direct inversion)
 			diff = val1-val0;	
+			val0 = val1; //Read in old value
 		}
 		dist_diff = hd - hd_old;
 	}
 
       	//write to files
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+		for (int k=0;k<GRIDSIZE;k++)
+		{
+ 			test_stream << C(m,k) << ", ";
+		}
+		test_stream << endl;
+ 	}
  	for (int m=0;m<GRIDSIZE;m++)
  	{
  		h_stream << h[m] << endl;
@@ -274,6 +298,10 @@ int main ()
  	for (int m=0;m<GRIDSIZE;m++)
  	{
  		cfd_stream << cfd[m] << endl;
+ 	}
+ 	for (int m=0;m<GRIDSIZE;m++)
+ 	{
+ 		val_stream << val1[m] << endl;
  	}
 	mig_cut_stream << mig_cut << endl;
 
