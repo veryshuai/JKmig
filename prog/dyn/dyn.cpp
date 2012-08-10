@@ -7,74 +7,112 @@
 
 using namespace std;
 
-//global constants
-const double 	HALP    	      = 0.02;   //home meeting hazard
-const double 	FALP    	      = 0.015;  //foreign meeting hazard
-const int 	  GRIDSIZE 	      = 1000;   //number of grid points
-const int     GRIDMAX 	      = 300;    //maximum grid value
-const int 	  PERIODS  	      = 4;    //number of periods
-const double  PERIOD_LENGTH 	= 0.2;	  //length of a period (say a unit is a year)
-const double 	B      	        = 1.0;    //penalty for living abroad
-const double  THETA   	      =-0.5;    //production function parameter
-const double 	RHO     	      = 0.05;   //time discount factor
-const double  FLAM   	        = 1;      //foreign distribution lambda
-const double	HLAM 		        = 0.15;    //home distribution lambda
-
-const double  INCREMENT = (double) GRIDMAX/ (double) GRIDSIZE; //step size for the grid
-
 struct Distributions {
-	Eigen::VectorXd h; 
-	Eigen::VectorXd f; 
-	Eigen::VectorXd hd; 
-	Eigen::VectorXd fd; 
-	Eigen::VectorXd chd; 
-	Eigen::VectorXd cfd; 
-	Eigen::VectorXd cut_off;
-	Eigen::MatrixXd fd_dyn;
-	Eigen::MatrixXd hd_dyn;
-	Eigen::MatrixXd chd_dyn; 
-	Eigen::MatrixXd cfd_dyn; 
-	Eigen::MatrixXd val_dyn;
+  Eigen::VectorXd h; 
+  Eigen::VectorXd f; 
+  Eigen::VectorXd hd; 
+  Eigen::VectorXd fd; 
+  Eigen::VectorXd chd; 
+  Eigen::VectorXd cfd; 
+  Eigen::VectorXd cut_off;
+  Eigen::MatrixXd fd_dyn;
+  Eigen::MatrixXd hd_dyn;
+  Eigen::MatrixXd chd_dyn; 
+  Eigen::MatrixXd cfd_dyn; 
+  Eigen::MatrixXd val_dyn;
+  Eigen::VectorXd hGDP;
+  Eigen::VectorXd fGDP;
+  Eigen::VectorXd hGrowth;
+  Eigen::VectorXd fGrowth;
 
-	Distributions(int gridSize, int periods) {
+  Distributions(int gridSize, int periods) {
     h       =  Eigen::VectorXd(gridSize); 
     f       =  Eigen::VectorXd(gridSize); 
     hd      =  Eigen::VectorXd(gridSize); 
     fd      =  Eigen::VectorXd(gridSize); 
     chd     =  Eigen::VectorXd(gridSize); 
     cfd     =  Eigen::VectorXd(gridSize); 
-	  cut_off =  Eigen::VectorXd(periods); 
+    cut_off =  Eigen::VectorXd(periods); 
     fd_dyn  =  Eigen::MatrixXd(gridSize,periods);
     hd_dyn  =  Eigen::MatrixXd(gridSize,periods);
     chd_dyn =  Eigen::MatrixXd(gridSize,periods); 
     cfd_dyn =  Eigen::MatrixXd(gridSize,periods); 
     val_dyn =  Eigen::MatrixXd(gridSize,periods); 
+    hGDP    =  Eigen::VectorXd(periods); 
+    fGDP    =  Eigen::VectorXd(periods); 
+    hGrowth =  Eigen::VectorXd(periods); 
+    fGrowth =  Eigen::VectorXd(periods); 
+  }
+};
+
+struct ValVars {
+  Eigen::VectorXd vdiff;
+  Eigen::VectorXd fth;
+  Eigen::VectorXd ftf;
+  Eigen::VectorXd cfth;
+  Eigen::VectorXd cftf;
+  Eigen::VectorXd Sh;
+  Eigen::VectorXd Sf;
+  Eigen::VectorXd stayhome;
+  Eigen::VectorXd goabroad;
+  Eigen::MatrixXd A;
+  Eigen::MatrixXd B;
+  Eigen::MatrixXd C;
+  Eigen::VectorXd b;
+  bool found;
+  double mig_cut;
+
+  ValVars(int gridSize, int periods) {
+    vdiff    =  Eigen::VectorXd(gridSize);
+    fth      =  Eigen::VectorXd(gridSize);
+    ftf      =  Eigen::VectorXd(gridSize);
+    cfth     =  Eigen::VectorXd(gridSize);
+    cftf     =  Eigen::VectorXd(gridSize);
+    Sh       =  Eigen::VectorXd(gridSize);
+    Sf       =  Eigen::VectorXd(gridSize);
+    stayhome =  Eigen::VectorXd(gridSize);
+    goabroad =  Eigen::VectorXd(gridSize);
+    A        =  Eigen::MatrixXd(gridSize,gridSize);
+    B        =  Eigen::MatrixXd(gridSize,gridSize);
+    C        =  Eigen::MatrixXd(gridSize,gridSize);
+    b        =  Eigen::VectorXd(gridSize);
   }
 };
 
 void read (Eigen::VectorXd& target, const char* filename, Eigen::MatrixXd& target2) {
   ifstream readme;
   readme.open(filename);
-	double x;
-	int k = 0;
-	while(readme >> x)
-	{
-	  	target[k] = x;
-	  	target2(k,0) = target[k];
-	  	k++;
-	}
+  double x;
+  int k = 0;
+  while(readme >> x)
+  {
+    target[k] = x;
+    target2(k,0) = target[k];
+    k++;
+  }
 }
 
-void dynfor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& f){
-  Eigen::VectorXd fd(GRIDSIZE);
-  Eigen::VectorXd cfd(GRIDSIZE);
-  Eigen::VectorXd interppoint(GRIDSIZE);  
-  Eigen::MatrixXd interpweights(GRIDSIZE,2);
-  double newspot = exp(HALP * PERIOD_LENGTH);
-  for (int k=0;k<GRIDSIZE;k++)
+void write (Eigen::VectorXd& input, const char* filename) {
+  ofstream writeme;
+  writeme.open(filename);
+  writeme << input;
+}
+void write (Eigen::MatrixXd& input, const char* filename) {
+  ofstream writeme;
+  writeme.open(filename);
+  writeme << input;
+}
+
+void dynFor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& f){
+  Eigen::VectorXd fd(constants::GRIDSIZE);
+  Eigen::VectorXd cfd(constants::GRIDSIZE);
+  Eigen::VectorXd interppoint(constants::GRIDSIZE);  
+  Eigen::MatrixXd interpweights(constants::GRIDSIZE,2);
+  double newspot = exp(constants::HALP * constants::PERIOD_LENGTH);
+  for (int k=0;k<constants::GRIDSIZE;k++)
   {	
     interppoint[k] = 0;
-    for (int m=1;m<GRIDSIZE;m++)
+    for (int m=1;m<constants::GRIDSIZE;m++)
     {
       if (f[m]>=newspot*f[k])
       {
@@ -86,9 +124,9 @@ void dynfor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd&
     }
   }
   // do the interpolation
-  for (int t=1;t<PERIODS;t++)
+  for (int t=1;t<constants::PERIODS;t++)
   {
-    for (int k=0;k<GRIDSIZE;k++)
+    for (int k=0;k<constants::GRIDSIZE;k++)
     {
       if (interppoint[k]!=0)
       {	
@@ -98,202 +136,234 @@ void dynfor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd&
         fd[k] = fd_dyn(k,t); //use this to write cfd_dyn
       }
       else
-        fd_dyn(k,t) = fd[GRIDSIZE-1]; //things don't change after a while.
+        fd_dyn(k,t) = fd[constants::GRIDSIZE-1]; //things don't change after a while.
     }
     cumsum(fd,cfd);
-    for (int k=0;k<GRIDSIZE;k++)
+    for (int k=0;k<constants::GRIDSIZE;k++)
       cfd_dyn(k,t) = cfd[k];
   }
 }
 
-int main() {
-	Distributions distr(GRIDSIZE,PERIODS);
-	
-	//read in distribution data
-  Eigen::MatrixXd junk_mat(GRIDSIZE,1);
-  Eigen::VectorXd junk_vec(GRIDSIZE);
-  read(distr.h,"../comb/h.csv",junk_mat);
-  read(distr.f,"../comb/f.csv",junk_mat);
-  read(distr.hd,"../comb/hd.csv",distr.hd_dyn);
-  read(distr.fd,"../comb/fd.csv",distr.fd_dyn);
-  read(distr.chd,"../comb/chd.csv",distr.chd_dyn);
-  read(distr.cfd,"../comb/cfd.csv",distr.cfd_dyn);
-  read(distr.cut_off,"../comb/cut.csv",junk_mat);
-  read(junk_vec,"../comb/val.csv",distr.val_dyn);
-
-  // get foreign distribution dynamics
-  dynfor(distr.fd_dyn,distr.cfd_dyn,distr.f);
-  
-  // APPROXIMATE CUT-OFF 
-
-  //first get productions
-	Eigen::VectorXd ph(GRIDSIZE);
-	Eigen::VectorXd pf(GRIDSIZE);
-	const bool HOME = 1;	
-	const bool FOREIGN = 0;
-  for (int k=0;k<GRIDSIZE;k++) 
+void distCalc (int t, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
+    Eigen::MatrixXd& chd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& cut_off){
+  for (int k=0;k<cut_off[t];k++)
   {
-    ph[k] = prod(distr.h[k],HOME);
-    pf[k] = prod(distr.f[k],FOREIGN);
+    hd_dyn(k,t) = hd_dyn(k,t-1) + constants::PERIOD_LENGTH * 
+      (-constants::HALP * hd_dyn(k,t-1) * chd_dyn(k,t-1) + 
+       constants::HALP * hd_dyn(k,t-1) * 
+       (chd_dyn(cut_off[t],t-1)-chd_dyn(k,t-1)) 
+       + constants::FALP * (1-chd_dyn(cut_off[t],t-1)) * fd_dyn(k,t-1));
+    if (k!=0)
+      chd_dyn(k,t) = chd_dyn(k-1,t) + hd_dyn(k,t) * constants::INCREMENT;
+    else
+      chd_dyn(k,t) = 0;
   }
 
-	//define time iteration variables
-	Eigen::VectorXd val0(GRIDSIZE);
-	Eigen::VectorXd val1(GRIDSIZE);
-	Eigen::VectorXd diff(GRIDSIZE);
-	Eigen::VectorXd fth(GRIDSIZE); 
-	Eigen::VectorXd ftf(GRIDSIZE); 
-	Eigen::VectorXd cfth(GRIDSIZE); 
-	Eigen::VectorXd cftf(GRIDSIZE); 
-	Eigen::VectorXd Sh(GRIDSIZE); 
-	Eigen::VectorXd Sf(GRIDSIZE); 
-	Eigen::VectorXd stayhome(GRIDSIZE);
-	Eigen::VectorXd goabroad(GRIDSIZE);
-	Eigen::MatrixXd A(GRIDSIZE,GRIDSIZE);
-  Eigen::MatrixXd B(GRIDSIZE,GRIDSIZE);	
-  Eigen::MatrixXd C(GRIDSIZE,GRIDSIZE);	
-	Eigen::VectorXd b(GRIDSIZE);
-	bool found;
-	double mig_cut;
-	double scale;
-
-  //begin time iteration
-  for (int t=1;t<PERIODS;t++)
+  for (int k=cut_off[t];k<constants::GRIDSIZE;k++)
   {
-    cout << "NOW ON ITERATION " << t << endl;
-    //read in new val0 and val1
-    for (int k=0;k<GRIDMAX;k++)
+    hd_dyn(k,t) = hd_dyn(k,t-1) + constants::PERIOD_LENGTH *
+      (-constants::FALP * hd_dyn(k,t-1) * cfd_dyn(k,t-1)  +
+       constants::FALP * fd_dyn(k,t-1) * (1 - chd_dyn(k,t-1)));
+    chd_dyn(k,t) = chd_dyn(k-1,t) + hd_dyn(k,t) * constants::INCREMENT;
+  }
+
+  //rescale the bution to get correct mass 
+  double scale;
+  scale = chd_dyn(constants::GRIDSIZE-1,t);
+  if (scale>0)
+  {
+    // for (int k=mig_cut;k<constants::GRIDSIZE;k++)
+    for (int k=0;k<constants::GRIDSIZE;k++)
     {
-      val0[k] = distr.val_dyn(k,t-1);
-      val1[k] = 0;
-      diff[k] = val0[k];
+      hd_dyn(k,t) = hd_dyn(k,t) / scale;
+      chd_dyn(k,t) = chd_dyn(k,t) / scale;
+    }
+  }
+}
+
+int valIter (int t, Eigen::VectorXd& val0, Eigen::VectorXd& val1, Eigen::VectorXd ph,
+    Eigen::VectorXd pf, Eigen::MatrixXd& val_dyn, Eigen::MatrixXd& hd_dyn,
+    Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& chd_dyn, Eigen::MatrixXd& cfd_dyn,
+    Eigen::VectorXd& cut_off, Eigen::VectorXd& h, Eigen::VectorXd& f){
+  ValVars ti(constants::GRIDSIZE,constants::PERIODS);
+
+  ti.vdiff = val0;
+  while (ti.vdiff.dot(ti.vdiff)/val0.dot(val0)>1e-5)
+  {
+    //cumulative first terms
+    ti.fth[0] = val0[0] * hd_dyn(0,t-1); 
+    ti.ftf[0] = val0[0] * fd_dyn(0,t-1); 
+    for (int k=1;k<constants::GRIDSIZE;k++)	
+    {
+      ti.fth[k] = ti.fth[k-1] + val0[k] * hd_dyn(k,t-1);
+      ti.ftf[k] = ti.ftf[k-1] + val0[k] * fd_dyn(k,t-1);
+    }
+    cumsum(ti.fth,ti.cfth);
+    cumsum(ti.ftf,ti.cftf);
+
+    //get integral approxs
+    ti.Sh[0] = ti.Sf[0] = 0.0; 
+    for (int k=1;k<constants::GRIDSIZE;k++) 
+    {
+      ti.Sh[k] = ti.cfth[k] - val0[k] * chd_dyn(k,t-1);
+      ti.Sf[k] = ti.cftf[k] - val0[k] * cfd_dyn(k,t-1);
     }
 
-    //value iteration  
-    while (diff.dot(diff)/val0.dot(val0)>1e-5)
+    //find cutoff for migration
+    ti.mig_cut = 0;
+    ti.found = 0;
+    for (int k=constants::GRIDSIZE-1;k>-1;k--)
     {
-
-      //cumulative first terms
-      fth[0] = val0[0] * distr.hd_dyn(0,t-1); 
-      ftf[0] = val0[0] * distr.fd_dyn(0,t-1); 
-      for (int k=1;k<GRIDSIZE;k++)	
+      ti.stayhome[k] = ph[k] + constants::HALP * ti.Sh[k];
+      ti.goabroad[k] = pf[k] + constants::FALP * ti.Sf[k];
+      if ((ti.found == 0) & (ti.stayhome[k] > ti.goabroad[k]))
       {
-        fth[k] = fth[k-1] + val0[k] * distr.hd_dyn(k,t-1);
-        ftf[k] = ftf[k-1] + val0[k] * distr.fd_dyn(k,t-1);
-      }			
-      cumsum(fth,cfth);
-      cumsum(ftf,cftf);
-
-      //get integral approxs
-      Sh[0] = Sf[0] = 0.0; 
-      for (int k=1;k<GRIDSIZE;k++) 
-      {
-        Sh[k] = cfth[k] - val0[k] * distr.chd_dyn(k,t-1);
-        Sf[k] = cftf[k] - val0[k] * distr.cfd_dyn(k,t-1);
-      }			
-
-      //find cutoff for migration
-      mig_cut = GRIDSIZE - 1;
-      found = 0;
-      for (int k=0;k<GRIDSIZE;k++)
-      {
-        stayhome[k] = ph[k] + HALP * Sh[k];
-        goabroad[k] = pf[k] + FALP * Sf[k];
-        if ((found == 0) & (stayhome[k] < goabroad[k]))
-        {
-          found = 1;
-          mig_cut = k;
-        }
+        ti.found = 1;
+        ti.mig_cut = k;
       }
-      cout << "The cut_off is currently at " << distr.h[mig_cut] << endl << endl;	
-      // with cut-off in hand, solve for value function 
-      // using the (really cool!) Lucas Moll matrix method.
-      for (int k=0;k<GRIDSIZE;k++)
+    }
+    cout << "The cut_off is currently at " << h[ti.mig_cut] << endl << endl;	
+    // with cut-off in hand, solve for value function 
+    // using the (really cool!) Lucas Moll matrix method.
+    for (int k=0;k<constants::GRIDSIZE;k++)
+    {
+      if (k<ti.mig_cut)
       {
-        if (k<mig_cut)
-        {
-					B(k,k) = (RHO-THETA*HALP+HALP*distr.chd_dyn(k,t-1)+HALP*distr.h[k]/INCREMENT);
-					for (int m=0;m!=k+1;m++)
-						C(k,m) = distr.hd_dyn(m,t-1) * HALP * INCREMENT;
-					b[k] = ph[k];
-					if (k<GRIDSIZE-1)
-						B(k,k+1) = -HALP * distr.h[k] / INCREMENT;
-				}
-				else
-				{	
-					B(k,k) = (RHO-THETA*HALP+FALP*distr.cfd_dyn(k,t-1)+HALP*distr.h[k]/INCREMENT);
-					for (int m=0;m!=k+1;m++)
-						C(k,m) = distr.fd_dyn(m,t-1) * FALP * INCREMENT;
-					b[k] = pf[k];
-					if (k<GRIDSIZE-1)
-						B(k,k+1) = -FALP * distr.f[k] / INCREMENT;
-				}
-			}
+        ti.B(k,k) = (constants::RHO-constants::THETA*constants::HALP
+            +constants::HALP*chd_dyn(k,t-1)+constants::HALP*h[k]/constants::INCREMENT);
+        for (int m=0;m!=k+1;m++)
+          ti.C(k,m) = hd_dyn(m,t-1) * constants::HALP * constants::INCREMENT;
+        ti.b[k] = ph[k];
+        if (k<constants::GRIDSIZE-1)
+          ti.B(k,k+1) = -constants::HALP * h[k] / constants::INCREMENT;
+      }
+      else
+      {
+        ti.B(k,k) = (constants::RHO-constants::THETA*constants::HALP
+            +constants::FALP*cfd_dyn(k,t-1)+constants::HALP*h[k]/constants::INCREMENT);
+        for (int m=0;m!=k+1;m++)
+          ti.C(k,m) = fd_dyn(m,t-1) * constants::FALP * constants::INCREMENT;
+        ti.b[k] = pf[k];
+        if (k<constants::GRIDSIZE-1)
+          ti.B(k,k+1) = -constants::FALP * f[k] / constants::INCREMENT;
+      }
+    }
+    
+    ti.A = ti.B-ti.C;
+    ti.A.llt().solveInPlace(ti.b);
+    val1 = ti.b;
+    //val1 = A.inverse()*b; //Alternative (direct inversion)
+    ti.vdiff = val1-val0;	
+    val0 = val1; //Read in old value
+  }
+  //read in new val0 and val1
+  for (int k=0;k<constants::GRIDMAX;k++)
+  {
+    val_dyn(k,t) = val0[k];
+  }
+  return ti.mig_cut;
+}
 
-			A = B-C;
-			A.llt().solveInPlace(b);
-			val1 = b;
-			//val1 = A.inverse()*b; //Alternative (direct inversion)
-			diff = val1-val0;	
-			val0 = val1; //Read in old value
-		}
-		//read in new val0 and val1
-		for (int k=0;k<GRIDMAX;k++)
-		{
-			distr.val_dyn(k,t) = val0[k];
-		}
-    distr.cut_off[t] = mig_cut;
-		
-		//update distributions, given cut-off THINK ABOUT hd[0]
-			
-		//calculate the distribution 
-		for (int k=0;k<distr.cut_off[t];k++)
-		{
-			distr.hd_dyn(k,t) = distr.hd_dyn(k,t-1) + PERIOD_LENGTH * 
-			  (-HALP * distr.hd_dyn(k,t-1) * distr.chd_dyn(k,t-1) + 
-			   HALP * distr.hd_dyn(k,t-1) * 
-			   (distr.chd_dyn(distr.cut_off[t],t-1)-distr.chd_dyn(k,t-1)) 
-			  + FALP * (1-distr.chd_dyn(distr.cut_off[t],t-1)) * distr.fd_dyn(k,t-1));
-			if (k!=0)
-			  distr.chd_dyn(k,t) = distr.chd_dyn(k-1,t) + distr.hd_dyn(k,t) * INCREMENT;
-      else 
-        distr.chd_dyn(k,t) = 0;
-		}
+void dynHom (Eigen::MatrixXd& val_dyn, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
+    Eigen::MatrixXd& chd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& cut_off,
+    Eigen::VectorXd& h, Eigen::VectorXd& f){
+  Eigen::VectorXd ph(constants::GRIDSIZE);
+  Eigen::VectorXd pf(constants::GRIDSIZE);
+  Eigen::VectorXd val0(constants::GRIDSIZE);
+  Eigen::VectorXd val1(constants::GRIDSIZE);
 
-		for (int k=distr.cut_off[t];k<GRIDSIZE;k++)
-		{
-			distr.hd_dyn(k,t) = distr.hd_dyn(k,t-1) + PERIOD_LENGTH *
-			  (-FALP * distr.hd_dyn(k,t-1) * distr.cfd_dyn(k,t-1)  +
-			  FALP * distr.fd_dyn(k,t-1) * (1 - distr.chd_dyn(k,t-1)));
-  			distr.chd_dyn(k,t) = distr.chd_dyn(k-1,t) + distr.hd_dyn(k,t) * INCREMENT;
-	  }
+  //get productions
+  for (int k=0;k<constants::GRIDSIZE;k++)
+  {
+    ph[k] = prod(h[k],1);
+    pf[k] = prod(f[k],0);
+  }
 
-		//rescale the distribution to get correct mass 
-		scale = distr.chd_dyn(GRIDSIZE-1,t);
-		if (scale>0)
-		{
-		 	// for (int k=mig_cut;k<GRIDSIZE;k++)
-		 	for (int k=0;k<GRIDSIZE;k++)
-		 	{
-				distr.hd_dyn(k,t) = distr.hd_dyn(k,t) / scale;
-		 		distr.chd_dyn(k,t) = distr.chd_dyn(k,t) / scale;
-		 	}
-		}
-	}  //end time loop
+  //begin time iteration
+  for (int t=1;t<constants::PERIODS;t++)
+  {
+    cout << "NOW ON ITERATION " << t << endl;
 
-	//WRITE TO FILE
-	ofstream hd_dyn_stream;
-	ofstream fd_dyn_stream;
-	ofstream chd_dyn_stream;
-	ofstream cfd_dyn_stream;
-	hd_dyn_stream.open("hd_dyn.csv");
-	fd_dyn_stream.open("fd_dyn.csv");
-	chd_dyn_stream.open("chd_dyn.csv");
-	cfd_dyn_stream.open("cfd_dyn.csv");
-  hd_dyn_stream << distr.hd_dyn;  
-  fd_dyn_stream << distr.fd_dyn;
-  chd_dyn_stream << distr.chd_dyn;  
-  cfd_dyn_stream << distr.cfd_dyn;
-	
+    //read in new initial val0
+    for (int k=0;k<constants::GRIDSIZE;k++)
+    {
+      val0[k] = val_dyn(k,t-1);
+    }
+  cout << "hello!" << endl;
+    //value iteration
+    cut_off[t] = valIter(t,val0,val1,ph,pf,val_dyn,hd_dyn,fd_dyn,
+        chd_dyn,cfd_dyn, cut_off,h,f);
+
+    //update distributions, given cut-off
+    distCalc(t,hd_dyn,fd_dyn,chd_dyn,cfd_dyn,cut_off);
+  }
+}
+
+void growth (Eigen::VectorXd& hGDP, Eigen::VectorXd& fGDP, Eigen::VectorXd& hGrowth,
+    Eigen::VectorXd& fGrowth, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
+    Eigen::VectorXd& h, Eigen::VectorXd& f, Eigen::VectorXd& cut_off){
+  //get productions
+  Eigen::VectorXd ph(constants::GRIDSIZE);
+  Eigen::VectorXd pf(constants::GRIDSIZE);
+  for (int k=0;k<constants::GRIDSIZE;k++) {
+    ph[k] = prod(h[k],1);
+    pf[k] = prod(f[k],0);
+  }
+
+  for (int t=0;t<constants::PERIODS;t++) {
+    hGDP[t] = ph[0] * hd_dyn(0,t);
+    fGDP[t] = ph[0] * fd_dyn(0,t);
+    for (int k=1;k<cut_off[t];k++) {
+      hGDP[t] = hGDP[t] + ph[k] * hd_dyn(k,t);
+      fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t);
+    }
+    for (int k=cut_off[t];k<constants::GRIDSIZE;k++) {
+      hGDP[t] = hGDP[t] + pf[k] * hd_dyn(k,t);
+      fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t);
+    }
+    if (t>0){
+      hGrowth[t] = (hGDP[t] - hGDP[t-1]) / hGDP[t-1];
+      fGrowth[t] = (fGDP[t] - fGDP[t-1]) / fGDP[t-1];
+    }
+  }
+}
+
+int main() {
+  Distributions distr(constants::GRIDSIZE,constants::PERIODS);
+
+  //read in distribution data
+  Eigen::MatrixXd junk_mat(constants::GRIDSIZE,1);
+  Eigen::VectorXd junk_vec(constants::GRIDSIZE);
+  read(distr.h,"h.csv",junk_mat);
+  read(distr.f,"f.csv",junk_mat);
+  read(distr.hd,"hd.csv",distr.hd_dyn);
+  read(distr.fd,"fd.csv",distr.fd_dyn);
+  read(distr.chd,"chd.csv",distr.chd_dyn);
+  read(distr.cfd,"cfd.csv",distr.cfd_dyn);
+  read(distr.cut_off,"cut.csv",junk_mat);
+  read(junk_vec,"val.csv",distr.val_dyn);
+
+  // get foreign distribution dynamics
+  dynFor(distr.fd_dyn,distr.cfd_dyn,distr.f);
+
+  // get home distribution dynamics
+  dynHom(distr.val_dyn,distr.hd_dyn,distr.fd_dyn,
+      distr.chd_dyn,distr.cfd_dyn,distr.cut_off,distr.h,distr.f);
+
+  // get growth
+  growth(distr.hGDP,distr.fGDP,distr.hGrowth,distr.fGrowth,distr.hd_dyn,
+      distr.fd_dyn,distr.h,distr.f,distr.cut_off);
+
+  //WRITE TO FILE
+  write(distr.hd_dyn,"hd_dyn.csv");
+  write(distr.fd_dyn,"fd_dyn.csv");
+  write(distr.chd_dyn,"chd_dyn.csv");
+  write(distr.cfd_dyn,"cfd_dyn.csv");
+  write(distr.hGDP,"hGDP.csv");
+  write(distr.fGDP,"fGDP.csv");
+  write(distr.hGrowth,"hGrowth.csv");
+  write(distr.fGrowth,"fGrowth.csv");
+
+  cout << "All Done!" << endl;
 }
 

@@ -2,12 +2,6 @@
 #include <Eigen/Dense>
 #include "mig.h"
 
-using namespace std;
-
-double THETA;
-double B;
-int GRIDSIZE;
-double INCREMENT;
 double cost;
 double home;
 Eigen::VectorXd input;
@@ -17,11 +11,14 @@ Eigen::VectorXd output;
 double prod (double cost, bool home)
 {
 	if (home == 1)
-		return (pow(cost,THETA));
+		return (pow(cost,constants::THETA));
 	if (home == 0)	
-		return (pow(cost,THETA)/(1.0+B));
+		return (pow(cost,constants::THETA)/(1.0+constants::B));
 	else
-		cout << "Error in production calculation" << endl;
+  {
+    std::cout << "Error in production calculation" << std::endl;
+		return 0;
+  }
 }
 
 //running summation of Eigen vector
@@ -29,9 +26,9 @@ void cumsum (Eigen::VectorXd& input, Eigen::VectorXd& output)
 {
 	double summation = 0.0;
 
-	for (int m=0;m<GRIDSIZE;m++)
+	for (int m=0;m<constants::GRIDSIZE;m++)
 	{
-		summation += input[m] * INCREMENT;
+		summation += input[m] * constants::INCREMENT;
 		output[m] = summation;
 	}
 }
