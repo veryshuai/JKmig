@@ -26,10 +26,12 @@ mig.cpp
 CPP_DEPS = $(CPP_SRCS:.cpp=.d)
 OBJS = $(CPP_SRCS:.cpp=.o)
 
+-include $(CPP_DEPS)
+
 # Each subdirectory must supply rules for building sources it contributes
 %.o:   %.cpp
 	@echo 'Building file: $<'
-	g++ -O0 -g3 -Wall -Wno-sign-compare -c -fmessage-length=0 $(INC_PATH) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -O0 -g3 -Wall -Wno-sign-compare -c -fmessage-length=0 $(INC_PATH) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d) $@" -o"$@" "$<"
 	@echo ' '
 
 #LIBS := -lknitro -ldl -lxerces-c -lcasadi -larprec

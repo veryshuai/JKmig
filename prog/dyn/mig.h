@@ -4,17 +4,17 @@
 #define MIG_H
  
 namespace constants {
-  const double  HALP            = .20;   //home meeting hazard
-  const double  FALP            = .10;  //foreign meeting hazard
-  const int     GRIDSIZE        = 700;   //number of grid points
+  const double  HALP            = .02;   //home meeting hazard
+  const double  FALP            = .017;  //foreign meeting hazard
+  const int     GRIDSIZE        = 1000;   //number of grid points
   const int     GRIDMAX         = 50;    //maximum grid value
-  const int     PERIODS         = 3;    //number of periods
+  const int     PERIODS         = 25;    //number of periods
   const double  PERIOD_LENGTH   = 0.2;  //length of a period (say a unit is a year)
-  const double  B               = 3;    //penalty for living abroad
+  const double  B               = .1;    //penalty for living abroad
   const double  THETA           =-0.5;    //production function parameter
   const double  RHO             = 0.05;   //time discount factor
   const double  FLAM            = 1;      //foreign distribution lambda
-  const int     MIG_INIT        = 50;    //initial cut off guess
+  const int     MIG_INIT        = 250;    //initial cut off guess
   const double  INCREMENT = (double) GRIDMAX/ (double) GRIDSIZE; //step size for the grid
   const double  HLAM            = FALP * FLAM / HALP;    //home distribution lambda
 }

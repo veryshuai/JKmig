@@ -13,9 +13,9 @@ VPATH = ../
 all: comb
 
 nothing:
-	@echo ' ' 
+	@echo ' '
 	@echo $(CPP_SRCS:.cpp=.d)
-	@echo ' ' 
+	@echo ' '
 
 # Add inputs and outputs from these tool invocations to the build
 # variables

@@ -117,7 +117,7 @@ void dynFor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd&
       if (f[m]>=newspot*f[k])
       {
         interppoint[k] = m;
-        interpweights(k,0) =  (f[m] - newspot*f[k]) / (f[m] - f[m-1]); 
+        interpweights(k,0) =  (f[m] - newspot*f[k]) / (f[m] - f[m-1]);
         interpweights(k,1) = 1 - interpweights(k,0);
         break;
       }
@@ -130,7 +130,7 @@ void dynFor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd&
     {
       if (interppoint[k]!=0)
       {
-        fd_dyn(k,t) = interpweights(k,0) * fd_dyn(interppoint[k]-1,t-1) 
+        fd_dyn(k,t) = interpweights(k,0) * fd_dyn(interppoint[k]-1,t-1)
           + interpweights(k,1) * fd_dyn(interppoint[k],t-1); //scale over
         fd_dyn(k,t) = newspot * fd_dyn(k,t); //scale up
         fd[k] = fd_dyn(k,t); //use this to write cfd_dyn
@@ -149,15 +149,15 @@ void distCalc (int t, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
     Eigen::MatrixXd& chd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& cut_off){
   for (int k=0;k<cut_off[t];k++)
   {
-    hd_dyn(k,t) = hd_dyn(k,t-1) + constants::PERIOD_LENGTH * 
-      (-constants::HALP * hd_dyn(k,t-1) * chd_dyn(k,t-1) + 
-       constants::HALP * hd_dyn(k,t-1) * 
-       (chd_dyn(cut_off[t],t-1)-chd_dyn(k,t-1)) 
+    hd_dyn(k,t) = hd_dyn(k,t-1) + constants::PERIOD_LENGTH *
+      (-constants::HALP * hd_dyn(k,t-1) * chd_dyn(k,t-1) +
+       constants::HALP * hd_dyn(k,t-1) *
+       (chd_dyn(cut_off[t],t-1)-chd_dyn(k,t-1))
        + constants::FALP * (1-chd_dyn(cut_off[t],t-1)) * fd_dyn(k,t-1));
     if (k!=0)
       chd_dyn(k,t) = chd_dyn(k-1,t) + hd_dyn(k,t) * constants::INCREMENT;
     else
-      chd_dyn(k,t) = 0;
+      chd_dyn(k,t) = hd_dyn(k,t) * constants::INCREMENT;
   }
 
   for (int k=cut_off[t];k<constants::GRIDSIZE;k++)
@@ -167,19 +167,6 @@ void distCalc (int t, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
        constants::FALP * fd_dyn(k,t-1) * (1 - chd_dyn(k,t-1)));
     chd_dyn(k,t) = chd_dyn(k-1,t) + hd_dyn(k,t) * constants::INCREMENT;
   }
-
-  // //rescale the distribution to get correct mass 
-  // double scale;
-  // scale = chd_dyn(constants::GRIDSIZE-1,t);
-  // if (scale>0)
-  // {
-  //   // for (int k=mig_cut;k<constants::GRIDSIZE;k++)
-  //   for (int k=0;k<constants::GRIDSIZE;k++)
-  //   {
-  //     hd_dyn(k,t) = hd_dyn(k,t) / scale;
-  //     chd_dyn(k,t) = chd_dyn(k,t) / scale;
-  //   }
-  // }
 }
 
 int valIter (int t, Eigen::VectorXd& val0, Eigen::VectorXd& val1, Eigen::VectorXd ph,
@@ -223,8 +210,6 @@ int valIter (int t, Eigen::VectorXd& val0, Eigen::VectorXd& val1, Eigen::VectorX
         ti.mig_cut = k;
       }
     }
-    for (int k=0;k<10;k++)
-      cout << stayhome[k] << "  " << goabroad[k] << endl;
     cout << "The cut_off is currently at " << h[ti.mig_cut] << endl << endl;
     // with cut-off in hand, solve for value function
     // using the (really cool!) Lucas Moll matrix method.
@@ -233,7 +218,7 @@ int valIter (int t, Eigen::VectorXd& val0, Eigen::VectorXd& val1, Eigen::VectorX
     {
       if (k<ti.mig_cut)
       {
-        ti.B(k,k) = (constants::RHO-constants::THETA*constants::HALP
+        ti.B(k,k) = (constants::RHO+constants::THETA*constants::HALP
             +constants::HALP*chd_dyn(k,t-1)+constants::HALP*h[k]/constants::INCREMENT);
         for (int m=0;m<k+1;m++)
           ti.C(k,m) = hd_dyn(m,t-1) * constants::HALP * constants::INCREMENT;
@@ -243,13 +228,13 @@ int valIter (int t, Eigen::VectorXd& val0, Eigen::VectorXd& val1, Eigen::VectorX
       }
       else
       {
-        ti.B(k,k) = (constants::RHO-constants::THETA*constants::HALP
+        ti.B(k,k) = (constants::RHO+constants::THETA*constants::HALP
             +constants::FALP*cfd_dyn(k,t-1)+constants::HALP*h[k]/constants::INCREMENT);
         for (int m=0;m<k+1;m++)
           ti.C(k,m) = fd_dyn(m,t-1) * constants::FALP * constants::INCREMENT;
         ti.b[k] = pf[k];
         if (k<constants::GRIDSIZE-1)
-          ti.B(k,k+1) = -constants::FALP * f[k] / constants::INCREMENT;
+          ti.B(k,k+1) = -constants::HALP * f[k] / constants::INCREMENT;
       }
     }
     ti.A = ti.B-ti.C;
@@ -313,15 +298,15 @@ void growth (Eigen::VectorXd& hGDP, Eigen::VectorXd& fGDP, Eigen::VectorXd& hGro
   }
 
   for (int t=0;t<constants::PERIODS;t++) {
-    hGDP[t] = ph[0] * hd_dyn(0,t);
-    fGDP[t] = ph[0] * fd_dyn(0,t);
+    hGDP[t] = ph[0] * hd_dyn(0,t) * constants::INCREMENT;
+    fGDP[t] = ph[0] * fd_dyn(0,t) * constants::INCREMENT;
     for (int k=1;k<cut_off[t];k++) {
-      hGDP[t] = hGDP[t] + ph[k] * hd_dyn(k,t);
-      fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t);
+      hGDP[t] = hGDP[t] + ph[k] * hd_dyn(k,t) * constants::INCREMENT;
+      fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t) * constants::INCREMENT;
     }
     for (int k=cut_off[t];k<constants::GRIDSIZE;k++) {
-      hGDP[t] = hGDP[t] + (pf[k] * hd_dyn(k,t)) / constants::PERIOD_LENGTH;
-      fGDP[t] = fGDP[t] + (ph[k] * fd_dyn(k,t)) / constants::PERIOD_LENGTH;
+      hGDP[t] = hGDP[t] + pf[k] * hd_dyn(k,t) * constants::INCREMENT;
+      fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t) * constants::INCREMENT;
     }
     if (t>0){
       hGrowth[t] = (hGDP[t] - hGDP[t-1]) / hGDP[t-1];
