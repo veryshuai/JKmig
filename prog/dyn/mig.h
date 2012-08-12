@@ -8,7 +8,7 @@ namespace constants {
   const double  FALP            = .017;  //foreign meeting hazard
   const int     GRIDSIZE        = 1000;   //number of grid points
   const int     GRIDMAX         = 50;    //maximum grid value
-  const int     PERIODS         = 25;    //number of periods
+  const int     PERIODS         = 10;    //number of periods
   const double  PERIOD_LENGTH   = 0.2;  //length of a period (say a unit is a year)
   const double  B               = .1;    //penalty for living abroad
   const double  THETA           =-0.5;    //production function parameter

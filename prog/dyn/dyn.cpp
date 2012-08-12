@@ -106,41 +106,40 @@ void write (Eigen::MatrixXd& input, const char* filename) {
 void dynFor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd& f){
   Eigen::VectorXd fd(constants::GRIDSIZE);
   Eigen::VectorXd cfd(constants::GRIDSIZE);
-  Eigen::VectorXd interppoint(constants::GRIDSIZE);  
+  Eigen::VectorXd interppoint(constants::GRIDSIZE);
   Eigen::MatrixXd interpweights(constants::GRIDSIZE,2);
-  double newspot = exp(constants::HALP * constants::PERIOD_LENGTH);
-  for (int k=0;k<constants::GRIDSIZE;k++)
-  {
-    interppoint[k] = 0;
-    for (int m=1;m<constants::GRIDSIZE;m++)
-    {
-      if (f[m]>=newspot*f[k])
-      {
-        interppoint[k] = m;
-        interpweights(k,0) =  (f[m] - newspot*f[k]) / (f[m] - f[m-1]);
-        interpweights(k,1) = 1 - interpweights(k,0);
-        break;
-      }
-    }
-  }
-  // do the interpolation
   for (int t=1;t<constants::PERIODS;t++)
   {
+    double newspot = exp(constants::HALP * constants::PERIOD_LENGTH * t);
+    for (int k=0;k<constants::GRIDSIZE;k++)
+    {
+      interppoint[k] = 0;
+      for (int m=1;m<constants::GRIDSIZE;m++)
+      {
+        if (f[m]>=newspot*f[k])
+        {
+          interppoint[k] = m;
+          interpweights(k,0) =  (f[m] - newspot*f[k]) / constants::INCREMENT;
+          interpweights(k,1) = 1 - interpweights(k,0);
+          break;
+        }
+      }
+    }
+    // do the interpolation
     for (int k=0;k<constants::GRIDSIZE;k++)
     {
       if (interppoint[k]!=0)
       {
-        fd_dyn(k,t) = interpweights(k,0) * fd_dyn(interppoint[k]-1,t-1)
-          + interpweights(k,1) * fd_dyn(interppoint[k],t-1); //scale over
-        fd_dyn(k,t) = newspot * fd_dyn(k,t); //scale up
-        fd[k] = fd_dyn(k,t); //use this to write cfd_dyn
+        fd_dyn(k,t) = interpweights(k,0) * fd_dyn(interppoint[k]-1,0)
+          + interpweights(k,1) * fd_dyn(interppoint[k],0); //scale over
+        fd_dyn(k,t) = newspot * fd_dyn(k,0); //scale up
       }
       else
-        fd_dyn(k,t) = fd[constants::GRIDSIZE-1]; //things don't change after a while.
-    }
-    cumsum(fd,cfd);
-    for (int k=0;k<constants::GRIDSIZE;k++) {
-      cfd_dyn(k,t) = cfd[k];
+        fd_dyn(k,t) = fd_dyn(constants::GRIDSIZE-1,0); //things don't change after a while.
+      if (k!=0)
+        cfd_dyn(k,t) = cfd_dyn(k-1,t) + fd_dyn(k,t) * constants::INCREMENT;
+      else
+        cfd_dyn(k,t) = fd_dyn(k,t) * constants::INCREMENT;
     }
   }
 }
@@ -309,8 +308,8 @@ void growth (Eigen::VectorXd& hGDP, Eigen::VectorXd& fGDP, Eigen::VectorXd& hGro
       fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t) * constants::INCREMENT;
     }
     if (t>0){
-      hGrowth[t] = (hGDP[t] - hGDP[t-1]) / hGDP[t-1];
-      fGrowth[t] = (fGDP[t] - fGDP[t-1]) / fGDP[t-1];
+      hGrowth[t] = (hGDP[t] - hGDP[t-1]) / hGDP[t-1] / constants::PERIOD_LENGTH;
+      fGrowth[t] = (fGDP[t] - fGDP[t-1]) / fGDP[t-1] / constants::PERIOD_LENGTH;
     }
   }
 }
