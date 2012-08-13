@@ -1,0 +1,135 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bbm} %for indicator function
+\usepackage[margin = 1in]{geometry}
+\usepackage{natbib}
+
+\title{Migrating to Grow}
+\author{David Jinkins}
+
+%front matter for theorem defs
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+%end theorem defs
+			    
+\begin{document}
+\maketitle
+
+\section{Income Gaps and Capital Mobility}
+
+There is an American non-profit organization called Kiva.  Entrepreneurs in poor countries post ads on the Kiva's website, and anybody in the United States can go on the website, filter through the requests, and loan money to the entrepreneurs with the most promising projects.  Today, for example, there is taxi driver in Tajikstan needs to purchase car parts, a shoe saleswoman in Togo wants an advance for inventory, and a farmer in the Phillipines who literally needs seed money.
+
+How much more mobile could capital be? And yet, there are huge differences in lifetime income in different regions of the world.  There have been a few mechanisms proposed for the difference.  It could be there is some sort of bad institutions which leads some regions to have poorly functioning economies.  It could be that patents prevent the best technologies from being used in some regions.  This paper argues that technology is not easily transferred between regions.   
+
+In the model presented below, the only way for a poor region to catch up to a rich region is to send people there.  
+
+
+\section{Model}
+There are two countries, Rich and Poor.  For now, let the populations of the two countries each be a unit mass.  Time is continuous.  The population of each country is described by a distribution of ``production cost'' at each moment.  In the rich country, this distribution is called $F(\cdot,t)$, and in the poor country it is called $G(\cdot,t)$.  Assume that both distributions are absolutely continuous.  There is only one good.\footnote{Andres Rodriguez-Clare says that a trade model is a model with at least two countries and at least two goods, so this is not a trade paper.}  An individual of cost level $z$ produces and consumes $z^{-\theta}$ in each period.
+
+As in \citet{Lucas2009} and \citet{LucasMoll2012}, a person randomly bump into others, and learns from them if the other person has a better technology.  Meetings are proportional to population, and happen with poisson rate $\alpha_h$ or $\alpha_f$ depending on whether the person lives in home or foreign.  To keep the model simple, I assume that one can only learn from natives.\footnote{I don't think this assumption is essential to the results, and it simplifies the algebra.}  The only decision that a person makes is to live in either home $h$ or foreign $f$.  The trade-off is that living in foreign country is costly, but also allows one to learn better technologies.  People living in foreign have their flow production reduced by a factor of $1+B$ (for barrier).  We are considering Nash equilibria in which there is a (possibly infinite) Poor cut-off cost above which all Poor nationals migrate to the rich country.  Denote such a cut-off cost by $z_m(t)$.  The Rich cut-off is infinity, because Rich nationals gain nothing by living in Poor.
+  Preferences over consumption and location choice at time $\tau$ are ordered:
+\begin{equation}
+  U(c) = \int_\tau^\infty e^{-\rho (t-\tau)} c(t) dt  
+\end{equation}
+
+
+Taking the cut-off as given, the cost distributions evolve according to the following Boltzmann equations:
+\begin{align}
+  \label{fevol}
+  \frac{\partial f(z,t)}{\partial t} &= \alpha_h f(z,t) \Big( -F(z,t) + \left(1-F(z,t)\right) \Big) \\
+  \label{gevol}
+  \frac{\partial g(z,t)}{\partial t} &= 
+  \begin{cases} 
+    -\alpha_h g(z,t) G(z,t) +\alpha_f f(z,t) \big(1-G(z_m(t),t)\big) + \alpha_h \big(G(z_m(t),t) - G(z,t) \big) & \mbox{if } z<z_m(t) \\
+    -\alpha_f g(z,t) F(z,t) + \alpha_f f(z,t) \big(1-G(z,t)\big) &\mbox{if } z>z_m(t)
+  \end{cases}
+\end{align}
+
+Since the cost distribution is better in the rich country, rich country nationals always choose to live at home.
+Let $\Delta V(y,t) := V(y,t)-V(z,t)$.
+A poor country national's value function satisfies:
+\begin{align}
+  \label{valfun}
+  \rho V(z,t) &= \frac{\partial V(z,t)}{\partial t} + \max\Bigg\{z^{-\theta} +  \alpha_h \int_0^{\min \{z,z_m(t)\}} \Delta V g(y,t) dy, \nonumber  \\
+  & \frac{1}{1+B} z^{-\theta}+ \alpha_f \int_0^z \Delta V f(y,t) dy \Bigg\}
+\end{align}
+A cut-off point, $z_m(t)$ satisfies:
+\begin{equation}
+  \label{cuteq}
+  z_m(t)^{-\theta} + \alpha_h \int_0^{z_m(t)} \Delta V g(y,t) dy = \frac{1}{1+B} z_m(t)^{-\theta} + \alpha_f \int_0^{z_m(t)} \Delta V f(y,t)dy
+\end{equation}
+In words, \eqref{cuteq} says that the expected discounted lifetime utility from living at home is equal to the expected discounted lifetime utility from moving abroad for a Poor native of cost type $z_m(t)$.
+\begin{proposition}
+  \label{uniqcut}
+ If $G$ stochastically dominates $F$ and $\alpha_g = \alpha_f$, then the cut-off cost is unique. 
+\end{proposition}
+\begin{proof}
+  We drop time subscripts which are irrelevant in this proof, and let $\alpha := \alpha_h = \alpha_f$.
+  Let $z$ denote a cut-off cost.
+  Rearranging \eqref{cuteq}, we can write:
+  \begin{equation}
+    \label{cutproof1}
+    \alpha \int_0^{z} \Delta V \left(f(y)-g(y)\right)dy = \frac{B}{1+B}z^{-\theta}
+  \end{equation}
+  Since $\theta > 0$, the right-side of \eqref{cutproof1} is a strictly decreasing function of $z$, as long as $B>0$.  
+  Thinking of the left-hand side of \eqref{cutproof1} as a function of $z$, we write:
+  \begin{align}
+    \label{cutproof2}
+    \frac{d LHS(z)}{d z} &= \alpha \left(V(z)-V(z)\right)\left(f(z)-g(z)\right) + -V_z(z) \int_0^z \left(f(y)-g(y)\right) dy \nonumber \\
+    &= -V_z(z) \int_0^z \left(f(y)-g(y)\right) dy
+  \end{align}
+  Since there is no benefit to having a higher cost, $V$ must be a weakly decreasing function of $z$.  That $G$ stochastically dominates $F$ then implies that \eqref{cutproof2} is weakly positive.  It follows that there can only be a single crossing of the LHS and RHS of \eqref{cutproof1}, so there is a unique cut-off cost if it exists.
+\end{proof}
+
+An equilibrium in this setup is very similar to that in LM.  
+An equilibrium, given initial distributions $F(z,0)$ and $G(z,0)$, is a triple $(F,G,V)$ of functions on $\mathbb{R}_+^2$ and a function $z_m$ on $\mathbb{R}_+$ such that:
+\begin{enumerate}
+  \item for all $t$, $F(\cdot,t)$ and $G(\cdot,t)$ are probability distributions with $G$ first order stochastically dominating $F$, 
+  \item given $z_m$, $F$ and $G$ satisfy \eqref{fevol} and \eqref{gevol},
+  \item given $F$ and $G$, $V$ satisfies \eqref{valfun},
+  \item $z_m$ is consistent with maximization of \eqref{valfun} given $F$ and $G$. 
+\end{enumerate}
+
+\section{Balanced Growth Path}
+Although I'm not sure whether this is the most interesting place to start, we follow \citet{LucasMoll2012} in defining a balanced growth path.
+In the balanced growth path, the rich and poor country will grow at the same rate.
+A balanced growth path is a numbers $\gamma$ and $\bar{z}$, and three functions $\phi,\psi$, and $v$, such that:
+\begin{enumerate}
+  \item $f(z,t) = e^{\gamma t} \phi(z e^{\gamma t})$,
+  \item $g(z,t) = e^{\gamma t} \psi(z e^{\gamma t})$,
+  \item $V(z,t) = e^{\theta \gamma t} v(ze^{\gamma t})$,
+  \item $z_m(t) = e^{-\gamma t} \bar{z}$.
+\end{enumerate}
+As in \citet{LucasMoll2012}, the specifications of $f$ and $g$ are so that quantiles of the distributions $F$ and $G$ shrink at the same rate $\gamma$.
+The cut-off is then defined so that it remains at the same quantile of $G$, i.e. $G(z_m(t) e^{\gamma t}) = G(\bar{z})$ for all $t$.
+The value functions form follows because it keeps \eqref{valfun} stationary given the other balanced growth path conditions.
+
+First I show that $\gamma = \alpha_h$.
+
+\begin{proposition}
+  \label{gammaeqalpha}
+$\gamma$ is equal to $\alpha_h$.
+\end{proposition}
+\begin{proof}
+    Suppose that $\{f,g,V,z_m\}$ is a balanced growth path.  Then the GDP of $f$ is given by:
+    \[
+        \mbox{GDP}_f = \int_0^\infty z^{-\theta} e^{\gamma t} \phi(z e^{\gamma t}) dz
+        \]
+%     Consider \eqref{gevol} evaluated at $z_m(t)$, which we will call $z^*$ to save space.  Since at any $t$ this is a single point in the distribution:
+%     \begin{align}
+%         -\alpha_h g(z^*,t) G(z^*,t) +\alpha_f f(z^*,t) \big(1-G(z^*,t)\big) \big(G(z^*,t) - G(z^*,t) \big) &= -\alpha_f g(z^*,t) F(z^*,t) + \alpha_f f(z^*,t) \big(1-G(z^*,t)\big) \\
+%         -\alpha_h g(z^*,t) G(z^*,t) &= -\alpha_f g(z^*,t) F(z^*,t)
+%     \end{align}
+
+\end{proof}
+
+\bibliographystyle{plainnat}
+\bibliography{biglist.bib}
+\end{document}
+
+
