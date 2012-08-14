@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -6,7 +6,7 @@
 \usepackage[margin = 1in]{geometry}
 \usepackage{natbib}
 
-\title{Migrating to Grow}
+\title{Migration and Growth}
 \author{David Jinkins}
 
 %front matter for theorem defs
@@ -15,13 +15,17 @@
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
 %end theorem defs
-			    
+
 \begin{document}
 \maketitle
 
-\section{Income Gaps and Capital Mobility}
+\section{Introduction}
 
-There is an American non-profit organization called Kiva.  Entrepreneurs in poor countries post ads on the Kiva's website, and anybody in the United States can go on the website, filter through the requests, and loan money to the entrepreneurs with the most promising projects.  Today, for example, there is taxi driver in Tajikstan needs to purchase car parts, a shoe saleswoman in Togo wants an advance for inventory, and a farmer in the Phillipines who literally needs seed money.
+There is a old and prolific debate about whether migration is good or bad for a ``country''.\footnote{One of my pet peeves is people talking about countries as if they were people\dots nothing is good nor bad for a country!}  The classic negative effect of migration is brain drain -- talented people move abroad.  More recent literature, however, has shown that the story is much more nuanced \citep{Beineetal2001}.  There can be brain gain, for instance, if people get more education in anticipation of a chance of moving abroad.  This paper will argue in support of a novel reason that migration benefits non-migrants--migrants bring back ideas, which non-migrants can learn.
+
+Recent literature has documented that international migrants for the most part return home.  \citet{Carrion-Flores2006} finds, for instance, that the mean duration of a Mexican's first stay in the USA is about 26 months.
+
+% There is an American non-profit organization called Kiva.  Entrepreneurs in poor countries post ads on the Kiva's website, and anybody in the United States can go on the website, filter through the requests, and loan money to the entrepreneurs with the most promising projects.  Today, for example, there is taxi driver in Tajikstan needs to purchase car parts, a shoe saleswoman in Togo wants an advance for inventory, and a farmer in the Phillipines who literally needs seed money.
 
 How much more mobile could capital be? And yet, there are huge differences in lifetime income in different regions of the world.  There have been a few mechanisms proposed for the difference.  It could be there is some sort of bad institutions which leads some regions to have poorly functioning economies.  It could be that patents prevent the best technologies from being used in some regions.  This paper argues that technology is not easily transferred between regions.   
 
@@ -95,10 +99,12 @@ An equilibrium, given initial distributions $F(z,0)$ and $G(z,0)$, is a triple $
   \item $z_m$ is consistent with maximization of \eqref{valfun} given $F$ and $G$. 
 \end{enumerate}
 
+I am going to follow the earlier literature and assume that $f(0,0) = \lambda \in \mathbb{R}_{++}$.  This assumption is critical if we want growth to last forever.  In addition, several of the results both in my paper and in earlier literature rely on the this assumption.  If you think it is too strong, \citet{LucasMoll2012} have a section devoted to getting similar results without infinitely productive people, at the cost of a much more involved model.
+
 \section{Balanced Growth Path}
-Although I'm not sure whether this is the most interesting place to start, we follow \citet{LucasMoll2012} in defining a balanced growth path.
+Although I'm not sure whether this is the most interesting place to start, I follow \citet{LucasMoll2012} in defining a balanced growth path.
 In the balanced growth path, the rich and poor country will grow at the same rate.
-A balanced growth path is a numbers $\gamma$ and $\bar{z}$, and three functions $\phi,\psi$, and $v$, such that:
+A balanced growth path is  numbers $\gamma$ and $\bar{z}$, and three functions $\phi,\psi$, and $v$, such that:
 \begin{enumerate}
   \item $f(z,t) = e^{\gamma t} \phi(z e^{\gamma t})$,
   \item $g(z,t) = e^{\gamma t} \psi(z e^{\gamma t})$,
@@ -110,24 +116,82 @@ The cut-off is then defined so that it remains at the same quantile of $G$, i.e.
 The value functions form follows because it keeps \eqref{valfun} stationary given the other balanced growth path conditions.
 
 First I show that $\gamma = \alpha_h$.
+The proof depends critically on the assumption that $f(0,0)\in \mathbb{R}_{++}$.
 
 \begin{proposition}
   \label{gammaeqalpha}
-$\gamma$ is equal to $\alpha_h$.
+On a balanced growth path, $\gamma$ is equal to $\alpha_h$.
 \end{proposition}
 \begin{proof}
-    Suppose that $\{f,g,V,z_m\}$ is a balanced growth path.  Then the GDP of $f$ is given by:
+    Suppose that $\{f,g,V,z_m\}$ is a balanced growth path.  Then by definition, we know that:
+    \begin{equation}
+        \label{BoltzLHS}
+        \frac{\partial f}{\partial t} = \gamma e^{\gamma t} \psi(z e^{\gamma t}) + \gamma z e^{2 \gamma t} \psi'(z e^{\gamma t})
+    \end{equation}
+
+    Also, from the Boltzmann equation \eqref{fevol} we have:
     \[
-        \mbox{GDP}_f = \int_0^\infty z^{-\theta} e^{\gamma t} \phi(z e^{\gamma t}) dz
-        \]
+        \frac{\partial f}{\partial t} = - \alpha_h e^{\gamma t} \psi(z e^{\gamma t}) \psi(z e^{\gamma t}) + \alpha_h e^{\gamma t} \psi(z e^{\gamma t}) (1 - \psi(z e^{\gamma t})
+    \]
+
+    Evaluate the two expressions above at $z=t=0$, and the proposition follows. \footnote{
+        This is a modification of an argument in \citet{LucasMoll2012}, but now I am a bit worried that $\psi'(0)$ can be infinite, potentially invalidating the argument (consider something like $1/x^2$\dots).  At worst, I will have to put an extra assumption in the statement of the proposition.
+}
+\end{proof}
+
 %     Consider \eqref{gevol} evaluated at $z_m(t)$, which we will call $z^*$ to save space.  Since at any $t$ this is a single point in the distribution:
 %     \begin{align}
 %         -\alpha_h g(z^*,t) G(z^*,t) +\alpha_f f(z^*,t) \big(1-G(z^*,t)\big) \big(G(z^*,t) - G(z^*,t) \big) &= -\alpha_f g(z^*,t) F(z^*,t) + \alpha_f f(z^*,t) \big(1-G(z^*,t)\big) \\
 %         -\alpha_h g(z^*,t) G(z^*,t) &= -\alpha_f g(z^*,t) F(z^*,t)
 %     \end{align}
 
+      The GDP of Rich on the balanced growth path is given by:
+      \begin{align}
+        \mbox{GDP}_R &= \int_0^\infty z^{-\theta} e^{\alpha_h t} \psi(z e^{\alpha_h t}) dz \\
+        &= e^{\alpha_h \theta t} \int_0^\infty x^{-\theta} \psi(x) dx.
+    \end{align}
+    Thus the growth rate of $\mbox{GDP}_R$ is $\alpha_h \theta$.  The growth rate of $\mbox{GDP}_P$ is exactly the same, but the algebra is slightly messier since we have to keep track of those living abroad.
+
+    The next result is technical.  I use it in the numerical section below.
+\begin{proposition}
+  On a balanced growth path, if $f(0,0) = \lambda_R$, then $g(0,0) = \alpha_f/\alpha_h * \lambda_R$.
+\end{proposition}
+\begin{proof}
+    Following \eqref{BoltzLHS}, and evaluating at $z=t=0$, we get:
+    \[
+        \frac{\frac{\partial g(0,0)}{\partial {t}}}{g(0,0)}  = \alpha_h
+    \]
+    Plugging in to \eqref{gevol} we get:
+    \[
+        \alpha_h = \alpha_h \Phi(\bar{z}) + \alpha_f \frac{\lambda_R}{\phi(0)}(1-\Phi(\bar{z}))
+    \]
+    Rearranging produces the required relationship.
 \end{proof}
 
+\section{Finding a Balanced Growth Path Numerically}
+
+The way I have set up the problem means that I do not have to worry about the Rich distribution.  Rich people do not migrate, and I have assumed that they cannot learn from migrants into Rich.  As far as Rich citizens are concerned, there is no second country.  This means that I can use a canned balanced growth cost distribution lifted from \citet{Alvarezetal2007} for Rich.\footnote{Here's a little aside.  I originally lifted the (exponential) BGP distribution from \citet{Lucas2009}, but I couldn't for the life of me get it to satisfy \eqref{fevol}.  After spending hours if not days carefully going through my work, I finally realized that the Lucas paper is deterministic, whereas the Boltzmann equations come from a Poisson arrival process.  The difference between on average meeting a person a day and meeting exactly one person everyday changes the BGP distribution from exponential to power law!} I only need to search for the Poor cost distribution.
+
+There are a bunch of parameters to set.  The three I am most interested in are $B$, which describes the production loss due to living abroad, and $\alpha_h/\alpha_f$.  $\alpha_h$ determines the growth rate of the economy, and $\alpha_f$ is a migrant learning penalty.  I need both types of friction if I want to get a non-trivial balanced growth path.\footnote{The need for two frictions reminds me of another neat migration paper -- \citet{Restucciaetal2008}.  They also need two types of wedge to explain why poor countries have inordinately large labor forces in the agricultural sector.}  The friction $B$ prevents everyone from moving abroad--think of it as the cost of migration.  The friction $\alpha_f$ makes it possible for Poor to permanently lag behind Rich.
+
+For any model setting there is going to be a trivial balanced growth path in which both countries have the same cost distribution and there is no migration.  I am interested in non-trivial balanced growth paths in which Poor is less well off compared to Rich.
+Below I describe the algorithm, modeled after that in \citet{LucasMoll2012}, that I use to search for a balanced growth path.  The algorithm is not a contraction mapping, and there are no existance/uniqueness proofs which apply to the sort of PDE I need to solve here.  I call this approach a CYF search algorithm.\footnote{CYF = Cross Your Fingers.} 
+
+There are two major steps in the algorithm.  In step one, given the Poor cost distribution, I update the migration cut-off.  In step two, given the migration cut-off I update the Poor cost distribution.  In step one, I need to solve for the value function.  Luckily, there is a trick in \citet{LucasMoll2012} which reduces this problem to a matrix inversion.  In this version of the paper, I am not going to give a detailed explanation of the algorithm.  Suffice it to say that the stopping rule in step one is that the change in the value function is small enough.  There is a consistency conditions that tells us when to stop step 2--in order to calculate the new distribution, we need to know the area under the migration cut-off, but this is not known until the new distribution is calculated.  Finally, the entire routine stops when the change in distribution after a complete iteration is small enough.
+
+I wrote this routine in c++, and after playing with the results over the last week or so, I have a conjecture that there is no balanced growth path with positive migration.  Even if I set up the model so that $\alpha_f$ is almost as high as $\alpha_h$, and $B$ is very small, the distribution adjusts so that Poor is almost as well off as Rich, such that there is no reason to migrate.  However, there are non-trivial BGP's with zero migration.  In fact, I can derive them analytically. This is possible because the difference between $\alpha_f$ and $\alpha_h$ can make a great distribution abroad look worse than a bad distribution at home.
+\section{On the Transition}
+
+
+Suppose that Rich and Poor are in a balanced growth path.  If my conjecture above is correct, there is no migration, but Poor is still poorer than rich.  Now, suppose that Rich suddenly reduces $B$, the barrier to migration.  Then there will be positive migration.  In the short term, the GDP per national of Poor will go down, as people take a hit in productivity to go and learn abroad, but the growth rate of Poor will speed up.  In particular, even if a Poor resident doesn't move abroad, she will benefit from the ideas brought back home by migrants.
+
+I wrote a program to simulate this situation, but it is only an approximation.  Since equilibrium behavior will depend on the entire transition path, which depends on equlibrium behavior, I approximate by making people assume that the current state of the world will endure forever.  This will exagerate migration, as the marginal migrant would prefer to stay home and wait until the distribution improves rather than migrate abroad.  However, I can still make the general point.  I conjecture that growth will converge again to the old rate, but at a new relative level to Rich.  So far, this is borne out by my simulations, although things are still a little buggy.
+
+\section{To do}
+
+Theoretically, the next step is to solve for the planner's problem.  Since there is a positive externality to migration, there will be too few migrants in equilibrium.  How many migrants would a planner send abroad, and is there a tax/subsidy which will achieve this allocation?
+
+Empriically, there are a couple of testible predictions.  The two that I think would be most fun to test would be the dip in GDP per \emph{national} after a relaxation in immigration policy, and the benefit to non-migrants (and non-family members!) of migration.  I envision the latter being some sort of growth regression, but there may be hope for micro data in the form of the Mexican Migration Project.
 \bibliographystyle{plainnat}
 \bibliography{biglist.bib}
 \end{document}
