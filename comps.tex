@@ -5,6 +5,7 @@
 \usepackage{bbm} %for indicator function
 \usepackage[margin = 1in]{geometry}
 \usepackage{natbib}
+\usepackage{graphicx}
 
 \title{Migration and Growth}
 \author{David Jinkins}
@@ -21,21 +22,23 @@
 
 \section{Introduction}
 
-There is a old and prolific debate about whether migration is good or bad for a ``country''.\footnote{One of my pet peeves is people talking about countries as if they were people\dots nothing is good nor bad for a country!}  The classic negative effect of migration is brain drain -- talented people move abroad.  More recent literature, however, has shown that the story is much more nuanced \citep{Beineetal2001}.  There can be brain gain, for instance, if people get more education in anticipation of a chance of moving abroad.  This paper will argue in support of a novel reason that migration benefits non-migrants--migrants bring back ideas, which non-migrants can learn.
+There is a old and prolific debate about whether migration is good or bad for a country.\footnote{One of my pet peeves is people talking about countries as if they were people\dots nothing is good nor bad for a country! I do it here because this is the way the problem is usually framed.}  This paper will argue in support of a novel reason that migration benefits those who stay at home--migrants bring back ideas, which others at home can learn.
 
-Recent literature has documented that international migrants for the most part return home.  \citet{Carrion-Flores2006} finds, for instance, that the mean duration of a Mexican's first stay in the USA is about 26 months.
+The classic negative effect of migration is brain drain -- talented people move abroad.  More recent literature, has shown that the story is much more nuanced \citep{Beineetal2001}.  There can be brain gain, for instance, if people get more education in anticipation of a chance of moving abroad.  Remittances are a well studied and measured positive feature of migration.
+
+Recent literature has documented that international migrants for the most part return home.  \citet{Carrion-Flores2006} finds, for instance, that the mean duration of a Mexican's first stay in the USA is about 26 months.  More introduction shall be inserted here.
 
 % There is an American non-profit organization called Kiva.  Entrepreneurs in poor countries post ads on the Kiva's website, and anybody in the United States can go on the website, filter through the requests, and loan money to the entrepreneurs with the most promising projects.  Today, for example, there is taxi driver in Tajikstan needs to purchase car parts, a shoe saleswoman in Togo wants an advance for inventory, and a farmer in the Phillipines who literally needs seed money.
 
-How much more mobile could capital be? And yet, there are huge differences in lifetime income in different regions of the world.  There have been a few mechanisms proposed for the difference.  It could be there is some sort of bad institutions which leads some regions to have poorly functioning economies.  It could be that patents prevent the best technologies from being used in some regions.  This paper argues that technology is not easily transferred between regions.   
+%How much more mobile could capital be? And yet, there are huge differences in lifetime income in different regions of the world.  There have been a few mechanisms proposed for the difference.  It could be there is some sort of bad institutions which leads some regions to have poorly functioning economies.  It could be that patents prevent the best technologies from being used in some regions.  This paper argues that technology is not easily transferred between regions.   
 
-In the model presented below, the only way for a poor region to catch up to a rich region is to send people there.  
+%In the model presented below, the only way for a poor region to catch up to a rich region is to send people there.  
 
 
 \section{Model}
 There are two countries, Rich and Poor.  For now, let the populations of the two countries each be a unit mass.  Time is continuous.  The population of each country is described by a distribution of ``production cost'' at each moment.  In the rich country, this distribution is called $F(\cdot,t)$, and in the poor country it is called $G(\cdot,t)$.  Assume that both distributions are absolutely continuous.  There is only one good.\footnote{Andres Rodriguez-Clare says that a trade model is a model with at least two countries and at least two goods, so this is not a trade paper.}  An individual of cost level $z$ produces and consumes $z^{-\theta}$ in each period.
 
-As in \citet{Lucas2009} and \citet{LucasMoll2012}, a person randomly bump into others, and learns from them if the other person has a better technology.  Meetings are proportional to population, and happen with poisson rate $\alpha_h$ or $\alpha_f$ depending on whether the person lives in home or foreign.  To keep the model simple, I assume that one can only learn from natives.\footnote{I don't think this assumption is essential to the results, and it simplifies the algebra.}  The only decision that a person makes is to live in either home $h$ or foreign $f$.  The trade-off is that living in foreign country is costly, but also allows one to learn better technologies.  People living in foreign have their flow production reduced by a factor of $1+B$ (for barrier).  We are considering Nash equilibria in which there is a (possibly infinite) Poor cut-off cost above which all Poor nationals migrate to the rich country.  Denote such a cut-off cost by $z_m(t)$.  The Rich cut-off is infinity, because Rich nationals gain nothing by living in Poor.
+As in \citet{Lucas2009} and \citet{LucasMoll2012}, a person randomly bumps into others, and learns from them if the other person has a better technology.  Meetings are proportional to population, and happen with Poisson rate $\alpha_h$ or $\alpha_f$ depending on whether the person lives in home or foreign.  To keep the model simple, I assume that one can only learn from natives.\footnote{I don't think this assumption is essential to the results, and it simplifies the algebra.}  The only decision that a person makes is to live in either home $h$ or foreign $f$.  The trade-off is that living in foreign country is costly, but may also allow one to learn better technologies.  People living in foreign have their flow production reduced by a factor of $1+B$ (for barrier).  We are considering Nash equilibria in which there is a (possibly infinite) Poor cut-off cost above which all Poor nationals migrate to the Rich.  Denote such a cut-off cost by $z_m(t)$.  The Rich cut-off is infinity, because Rich nationals gain nothing by living in Poor.
   Preferences over consumption and location choice at time $\tau$ are ordered:
 \begin{equation}
   U(c) = \int_\tau^\infty e^{-\rho (t-\tau)} c(t) dt  
@@ -54,9 +57,9 @@ Taking the cut-off as given, the cost distributions evolve according to the foll
   \end{cases}
 \end{align}
 
-Since the cost distribution is better in the rich country, rich country nationals always choose to live at home.
+Since the cost distribution is better in the Rich, Rich nationals always choose to live at home.
 Let $\Delta V(y,t) := V(y,t)-V(z,t)$.
-A poor country national's value function satisfies:
+A Poor citizen's value function satisfies:
 \begin{align}
   \label{valfun}
   \rho V(z,t) &= \frac{\partial V(z,t)}{\partial t} + \max\Bigg\{z^{-\theta} +  \alpha_h \int_0^{\min \{z,z_m(t)\}} \Delta V g(y,t) dy, \nonumber  \\
@@ -70,7 +73,7 @@ A cut-off point, $z_m(t)$ satisfies:
 In words, \eqref{cuteq} says that the expected discounted lifetime utility from living at home is equal to the expected discounted lifetime utility from moving abroad for a Poor native of cost type $z_m(t)$.
 \begin{proposition}
   \label{uniqcut}
- If $G$ stochastically dominates $F$ and $\alpha_g = \alpha_f$, then the cut-off cost is unique. 
+ If $G$ stochastically dominates $F$ and $\alpha_g = \alpha_f$, then a cut-off cost exists and is unique. 
 \end{proposition}
 \begin{proof}
   We drop time subscripts which are irrelevant in this proof, and let $\alpha := \alpha_h = \alpha_f$.
@@ -80,20 +83,20 @@ In words, \eqref{cuteq} says that the expected discounted lifetime utility from 
     \label{cutproof1}
     \alpha \int_0^{z} \Delta V \left(f(y)-g(y)\right)dy = \frac{B}{1+B}z^{-\theta}
   \end{equation}
-  Since $\theta > 0$, the right-side of \eqref{cutproof1} is a strictly decreasing function of $z$, as long as $B>0$.  
-  Thinking of the left-hand side of \eqref{cutproof1} as a function of $z$, we write:
+  Since $\theta > 0$, the right-hand side of \eqref{cutproof1} is a strictly decreasing function of $z$, and ranges from zero to infinity.
+  At $z=0$, the left-hand side of \eqref{cutproof1} is equal to zero.  Thinking of the left-hand side of \eqref{cutproof1} as a function of $z$, we write:
   \begin{align}
     \label{cutproof2}
-    \frac{d LHS(z)}{d z} &= \alpha \left(V(z)-V(z)\right)\left(f(z)-g(z)\right) + -V_z(z) \int_0^z \left(f(y)-g(y)\right) dy \nonumber \\
-    &= -V_z(z) \int_0^z \left(f(y)-g(y)\right) dy
+    \frac{d LHS(z)}{d z} &= \alpha \left(V(z)-V(z)\right)\left(f(z)-g(z)\right) + - \alpha V_z(z) \int_0^z \left(f(y)-g(y)\right) dy \nonumber \\
+    &= - \alpha V_z(z) \int_0^z \left(f(y)-g(y)\right) dy
   \end{align}
-  Since there is no benefit to having a higher cost, $V$ must be a weakly decreasing function of $z$.  That $G$ stochastically dominates $F$ then implies that \eqref{cutproof2} is weakly positive.  It follows that there can only be a single crossing of the LHS and RHS of \eqref{cutproof1}, so there is a unique cut-off cost if it exists.
+  Since there is no benefit to having a higher cost, $V$ must be a weakly decreasing function of $z$.  That $G$ stochastically dominates $F$ then implies that \eqref{cutproof2} is weakly positive.  Continuity, the ranges of the two sides, and their opposite monotonicities imply that a single crossing, and thus a unique cut-off cost exists.
 \end{proof}
 
-An equilibrium in this setup is very similar to that in LM.  
-An equilibrium, given initial distributions $F(z,0)$ and $G(z,0)$, is a triple $(F,G,V)$ of functions on $\mathbb{R}_+^2$ and a function $z_m$ on $\mathbb{R}_+$ such that:
+An equilibrium in this setup is very similar to that in \citet{LucasMoll2012}.
+An equilibrium, given initial distributions $F(z,0)$ and $G(z,0)$, is a triple $(F,G,V)$ of functions on $\mathbb{R}_+^2$ and a function $z_m$ on $\mathbb{R}_{+}$ such that:
 \begin{enumerate}
-  \item for all $t$, $F(\cdot,t)$ and $G(\cdot,t)$ are probability distributions with $G$ first order stochastically dominating $F$, 
+  \item for all $t$, $F(\cdot,t)$ and $G(\cdot,t)$ are probability distributions,
   \item given $z_m$, $F$ and $G$ satisfy \eqref{fevol} and \eqref{gevol},
   \item given $F$ and $G$, $V$ satisfies \eqref{valfun},
   \item $z_m$ is consistent with maximization of \eqref{valfun} given $F$ and $G$. 
@@ -154,7 +157,7 @@ On a balanced growth path, $\gamma$ is equal to $\alpha_h$.
 
     The next result is technical.  I use it in the numerical section below.
 \begin{proposition}
-  On a balanced growth path, if $f(0,0) = \lambda_R$, then $g(0,0) = \alpha_f/\alpha_h * \lambda_R$.
+  On a balanced growth path, if $f(0,0) = \lambda_R$, then $g(0,0) = \lambda_R\alpha_f/\alpha_h$.
 \end{proposition}
 \begin{proof}
     Following \eqref{BoltzLHS}, and evaluating at $z=t=0$, we get:
@@ -182,16 +185,75 @@ There are two major steps in the algorithm.  In step one, given the Poor cost di
 I wrote this routine in c++, and after playing with the results over the last week or so, I have a conjecture that there is no balanced growth path with positive migration.  Even if I set up the model so that $\alpha_f$ is almost as high as $\alpha_h$, and $B$ is very small, the distribution adjusts so that Poor is almost as well off as Rich, such that there is no reason to migrate.  However, there are non-trivial BGP's with zero migration.  In fact, I can derive them analytically. This is possible because the difference between $\alpha_f$ and $\alpha_h$ can make a great distribution abroad look worse than a bad distribution at home.
 \section{On the Transition}
 
+Suppose that Rich and Poor are in a balanced growth path.  If my conjecture above is correct, there is no migration, but Poor is still poorer than rich.  Now, suppose that Rich suddenly reduces $B$ or raises $\alpha_f$.  Then there will be positive migration.  In the very short term, the GDP per national of Poor will go down, as people take a hit in productivity to go and learn abroad, but the growth rate of Poor will speed up.  In particular, even if a Poor resident doesn't move abroad, she will benefit from the ideas brought back home by migrants.
 
-Suppose that Rich and Poor are in a balanced growth path.  If my conjecture above is correct, there is no migration, but Poor is still poorer than rich.  Now, suppose that Rich suddenly reduces $B$, the barrier to migration.  Then there will be positive migration.  In the short term, the GDP per national of Poor will go down, as people take a hit in productivity to go and learn abroad, but the growth rate of Poor will speed up.  In particular, even if a Poor resident doesn't move abroad, she will benefit from the ideas brought back home by migrants.
+I wrote a program to simulate this situation, but it is only an approximation.  Since equilibrium behavior will depend on the entire transition path, which depends on equilibrium behavior, I approximate by making people assume that the current state of the world will endure forever.  This will exaggerate migration, as the marginal migrant would prefer to stay home and wait until the distribution improves rather than migrate abroad.  However, I can still make the general point.  I conjecture that growth will converge again to the old rate, but at a new relative level to Rich.  
 
-I wrote a program to simulate this situation, but it is only an approximation.  Since equilibrium behavior will depend on the entire transition path, which depends on equlibrium behavior, I approximate by making people assume that the current state of the world will endure forever.  This will exagerate migration, as the marginal migrant would prefer to stay home and wait until the distribution improves rather than migrate abroad.  However, I can still make the general point.  I conjecture that growth will converge again to the old rate, but at a new relative level to Rich.  So far, this is borne out by my simulations, although things are still a little buggy.
+In the numerical example below, I begin with a balanced growth path that I can find by hand.  The rich and poor country cost distributions are respectively:
+\begin{align}
+    f(z,t) &= \frac{e^{\alpha_h t}}{(1 + e^{\alpha_h t} z)^2} \\
+    g(z,t) &= \frac{\frac{\alpha_f}{\alpha_h} e^{\alpha_h t}}{(1 + \frac{\alpha_f}{\alpha_h} e^{\alpha_h t} z)^2} 
+\end{align}
+
+The parameter values in the steady state are as follows:
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|l|}
+        \hline
+        Param       & Value & Description\\
+        \hline
+        $\alpha_h$  & 0.02  & average meetings at home\\
+        \hline
+        $\alpha_f$  & 0.01  & average meetings abroad\\
+        \hline
+        $B$         & 0.1   & flow payoff penalty\\
+        \hline
+        $\theta$    & 0.5   & production parameter\\
+        \hline
+        $\rho$      & .05   & discount factor\\
+        \hline
+        $\lambda_R$ & 1     & scale (Rich intercept)\\
+        \hline
+                    & 1000  & grid size\\
+        \hline
+                    & 200   & maximum cost\\
+        \hline
+                    & .2    & period length\\
+        \hline
+
+    \end{tabular}
+\end{table}
+
+The value of $\alpha_f$ is chosen to be rather extreme.  Migrants can only learn half as well as natives.  This will exaggerate all of the effects I am interested in documenting.
+
+I am interested in a unanticipated policy change.  In order to be able to apply Proposition \ref{cutproof1} (the existence and uniqueness of a cut-off), the policy I implement is to move $\alpha_f$ to the level of $\alpha_h$. As anticipated, this policy causes positive migration, faster growth in Poor, and a declining share of migrants over time.
+
+I include three figures below.  Figure \ref{fig:costdynamics} shows the balanced growth path evolution of the Poor cost distribution.  In Figure \ref{fig:policy_growth}  I document the post-policy Poor growth rate compared with the balanced growth path rate.  Figure \ref{fig:migrantshare} is the share of migrants after the policy change.
+
+\begin{figure}
+    \includegraphics[scale=.5]{pics/costdynamics.png}
+    \label{fig:costdynamics}
+    \caption{Poor cost density evolving over time}
+\end{figure}
+\begin{figure}
+    \includegraphics[scale=.5]{pics/policy_growth.png}
+    \label{fig:policy_growth}
+    \caption{Post policy growth rate vs balanced growth rate}
+\end{figure}
+\begin{figure}
+    \includegraphics[scale=.5]{pics/migrantshare.png}
+    \label{fig:migrantshare}
+    \caption{Share of migrants over time}
+\end{figure}
 
 \section{To do}
 
 Theoretically, the next step is to solve for the planner's problem.  Since there is a positive externality to migration, there will be too few migrants in equilibrium.  How many migrants would a planner send abroad, and is there a tax/subsidy which will achieve this allocation?
 
-Empriically, there are a couple of testible predictions.  The two that I think would be most fun to test would be the dip in GDP per \emph{national} after a relaxation in immigration policy, and the benefit to non-migrants (and non-family members!) of migration.  I envision the latter being some sort of growth regression, but there may be hope for micro data in the form of the Mexican Migration Project.
+Empirically, there are a couple of testable predictions.  The two that I think would be most fun to test would be the dip in GDP per \emph{national} after a relaxation in immigration policy, and the benefit to non-migrants (and non-family members!) of migration.  I envision the latter being some sort of growth regression, but there may be hope for micro data in the form of the Mexican Migration Project.
+
+Program wise, I need to do a proper solution for the transition path.  According to Konstantin, this is a standard thing that macro people do, but I need to read up a bit on how to do it.
+
 \bibliographystyle{plainnat}
 \bibliography{biglist.bib}
 \end{document}

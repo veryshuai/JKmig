@@ -4,6 +4,7 @@
 #include <fstream>
 #include <Eigen/Dense>
 #include "mig.h"
+#include <sys/stat.h> //for file existance
 
 using namespace std;
 
@@ -79,17 +80,32 @@ struct ValVars {
   }
 };
 
-void read (Eigen::VectorXd& target, const char* filename, Eigen::MatrixXd& target2) {
-  ifstream readme;
-  readme.open(filename);
-  double x;
-  int k = 0;
-  while(readme >> x)
-  {
-    target[k] = x;
-    target2(k,0) = target[k];
-    k++;
+bool fileExists(const std::string& filename)
+{
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) != -1)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool read (Eigen::VectorXd& target, const char* filename, Eigen::MatrixXd& target2) {
+  bool exist;
+  exist = fileExists(filename);
+  if (exist == 1){
+    ifstream readme;
+    readme.open(filename);
+    double x;
+    int k = 0;
+    while(readme >> x)
+    {
+      target[k] = x;
+      target2(k,0) = target[k];
+      k++;
+    }
   }
+  return exist;
 }
 
 void write (Eigen::VectorXd& input, const char* filename) {
@@ -136,8 +152,9 @@ void dynFor (Eigen::MatrixXd& fd_dyn, Eigen::MatrixXd& cfd_dyn, Eigen::VectorXd&
       }
       else
         fd_dyn(k,t) = fd_dyn(constants::GRIDSIZE-1,0); //things don't change after a while.
-      if (k!=0)
+      if (k!=0){
         cfd_dyn(k,t) = cfd_dyn(k-1,t) + fd_dyn(k,t) * constants::INCREMENT;
+      }
       else
         cfd_dyn(k,t) = fd_dyn(k,t) * constants::INCREMENT;
     }
@@ -150,8 +167,7 @@ void distCalc (int t, Eigen::MatrixXd& hd_dyn, Eigen::MatrixXd& fd_dyn,
   {
     hd_dyn(k,t) = hd_dyn(k,t-1) + constants::PERIOD_LENGTH *
       (-constants::HALP * hd_dyn(k,t-1) * chd_dyn(k,t-1) +
-       constants::HALP * hd_dyn(k,t-1) *
-       (chd_dyn(cut_off[t],t-1)-chd_dyn(k,t-1))
+       constants::HALP * hd_dyn(k,t-1) * (chd_dyn(cut_off[t],t-1)-chd_dyn(k,t-1))
        + constants::FALP * (1-chd_dyn(cut_off[t],t-1)) * fd_dyn(k,t-1));
     if (k!=0)
       chd_dyn(k,t) = chd_dyn(k-1,t) + hd_dyn(k,t) * constants::INCREMENT;
@@ -308,8 +324,8 @@ void growth (Eigen::VectorXd& hGDP, Eigen::VectorXd& fGDP, Eigen::VectorXd& hGro
       fGDP[t] = fGDP[t] + ph[k] * fd_dyn(k,t) * constants::INCREMENT;
     }
     if (t>0){
-      hGrowth[t] = (hGDP[t] - hGDP[t-1]) / hGDP[t-1] / constants::PERIOD_LENGTH;
-      fGrowth[t] = (fGDP[t] - fGDP[t-1]) / fGDP[t-1] / constants::PERIOD_LENGTH;
+      hGrowth[t] = ((hGDP[t] - hGDP[t-1]) / hGDP[t-1]) / constants::PERIOD_LENGTH;
+      fGrowth[t] = ((fGDP[t] - fGDP[t-1]) / fGDP[t-1]) / constants::PERIOD_LENGTH;
     }
   }
 }
@@ -330,7 +346,12 @@ int main() {
   read(junk_vec,"val.csv",distr.val_dyn);
 
   // get foreign distribution dynamics
-  dynFor(distr.fd_dyn,distr.cfd_dyn,distr.f);
+  // dynFor(distr.fd_dyn,distr.cfd_dyn,distr.f);
+  Eigen::VectorXd fake_cut;
+  fake_cut.setConstant(constants::GRIDSIZE,constants::GRIDSIZE-1);
+  for (int t=1;t<constants::PERIODS;t++){
+    distCalc(t,distr.fd_dyn,distr.fd_dyn,distr.cfd_dyn,distr.cfd_dyn,fake_cut);
+  }
 
   // get home distribution dynamics
   dynHom(distr.val_dyn,distr.hd_dyn,distr.fd_dyn,
@@ -349,6 +370,8 @@ int main() {
   write(distr.fGDP,"fGDP.csv");
   write(distr.hGrowth,"hGrowth.csv");
   write(distr.fGrowth,"fGrowth.csv");
+  write(distr.val_dyn,"val_dyn.csv");
+  write(distr.cut_off,"cut_dyn.csv");
 
 }
 
